@@ -1,0 +1,67 @@
+c[ info ] starting HTTP server...
+╭─────────────────────────────────────────────────╮
+│                                                 │
+│    Server address: http://localhost:3333        │
+│    Watch Mode: HMR                              │
+│    Ready in: 614 ms                             │
+│                                                 │
+╰─────────────────────────────────────────────────╯
+[00:12:42.982] INFO (38972): started HTTP server on localhost:3333
+AUTH MIDDLEWARE EXECUTED!
+Auth header: undefined
+No auth header or invalid format
+Auth Controller Registration error: ValidationError: Validation failure
+    at SimpleErrorReporter.createError (file:///Users/lucas/Documents/pulsezen/pulsezen-api/node_modules/@vinejs/vine/build/chunk-YXNUTVGP.js:140:12)
+    at eval (eval at #toAsyncFunction (file:///Users/lucas/Documents/pulsezen/pulsezen-api/node_modules/@vinejs/compiler/build/chunk-K5F7IOJS.js:1071:12), <anonymous>:218:23)
+    at VineValidator.validate (file:///Users/lucas/Documents/pulsezen/pulsezen-api/node_modules/@vinejs/vine/build/chunk-FED7BU4B.js:2980:16)
+    at RequestValidator.validateUsing (file:///Users/lucas/Documents/pulsezen/pulsezen-api/node_modules/@adonisjs/core/build/modules/http/request_validator.js:71:26)
+    at Request.validateUsing (file:///Users/lucas/Documents/pulsezen/pulsezen-api/node_modules/@adonisjs/core/build/providers/vinejs_provider.js:36:70)
+    at AuthController.register (/Users/lucas/Documents/pulsezen/pulsezen-api/app/modules/auth/controllers/auth_controller.ts:12:34)
+    at ContainerResolver.call (file:///Users/lucas/Documents/pulsezen/pulsezen-api/node_modules/@adonisjs/fold/build/chunk-KSBWZRP3.js:410:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  status: 422,
+  code: 'E_VALIDATION_ERROR',
+  messages: [
+    {
+      message: 'The password field and password_confirmation field must be the same',
+      rule: 'confirmed',
+      field: 'password',
+      meta: [Object]
+    }
+  ]
+}
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyMGQ1NGEwMS00Mjg0LTQwYjItYjdlOC01M2I0NzcyZGRhNmIiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTIxOTI5MDIsImV4cCI6MTc1NDc4NDkwMn0.aF9QYvMLIaKwztBbvlWHD5QBVncGnjnM2J16a0Q1igU
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyMGQ1NGEwMS00Mjg0LTQwYjItYjdlOC01M2I0NzcyZGRhNmIiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTIxOTI5MDIsImV4cCI6MTc1NDc4NDkwMn0.aF9QYvMLIaKwztBbvlWHD5QBVncGnjnM2J16a0Q1igU
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyMGQ1NGEwMS00Mjg0LTQwYjItYjdlOC01M2I0NzcyZGRhNmIiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTIxOTI5MDIsImV4cCI6MTc1NDc4NDkwMn0.aF9QYvMLIaKwztBbvlWHD5QBVncGnjnM2J16a0Q1igU
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyMGQ1NGEwMS00Mjg0LTQwYjItYjdlOC01M2I0NzcyZGRhNmIiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTIxOTI5MDIsImV4cCI6MTc1NDc4NDkwMn0.aF9QYvMLIaKwztBbvlWHD5QBVncGnjnM2J16a0Q1igU
+cfull-reload .env
+╭─────────────────────────────────────────────────╮
+│                                                 │
+│    Server address: http://127.0.0.1:3333        │
+│    Watch Mode: HMR                              │
+│    Ready in: 589 ms                             │
+│                                                 │
+╰─────────────────────────────────────────────────╯
+[00:42:56.820] INFO (44506): started HTTP server on 0.0.0.0:3333
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3NWRjYmIxMC1hYmU0LTRiMDAtOWIwYy1hNDNjMTA2Zjc2MGMiLCJlbWFpbCI6ImZpbmFsLXRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTIxOTQ4NTcsImV4cCI6MTc1NDc4Njg1N30.Lc3HP4A1Fr3JXcr96QzGikdYVjK71gPX6TUcJ8ZqJqQ
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzYzQyMzZhZi1lMzgwLTQ0YTgtYjdmYy0zOGQyOGI5NjI0MmIiLCJlbWFpbCI6Imx1Y2FzQGlnLmNvbSIsImlhdCI6MTc1MjE5NTAxOSwiZXhwIjoxNzU0Nzg3MDE5fQ.xBiw4e_x9o8VVoSxrCsIo5u9714_LAxviOdPe4EavYY
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlNmU3MTM5Mi1mMzFkLTQ1OWQtOWNhNC1hNDA5ZDk5ZTliODkiLCJlbWFpbCI6ImwxQGlnLmNvbSIsImlhdCI6MTc1MjE5NjIzMiwiZXhwIjoxNzU0Nzg4MjMyfQ.SFqAMSlFlYCoJ2TISGJQHYxwZ1kW8Mj7xYDBX-_HK70
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4NzVlMGFkNC1jNjk4LTQ4OTItYjIwYi0xMjRlMDRlZjNlMTMiLCJlbWFpbCI6InRlc3RlQHRlc3RlLmNvbSIsImlhdCI6MTc1MjE5NTQ1MCwiZXhwIjoxNzU0Nzg3NDUwfQ.dnW1HoU3rlhYQOOLQ6yZdj1f4EvohSjDJOazlyVHC1M
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkNDdjNTllZi1hZWJkLTRmNzctOTM4Yy1mNTBmN2Q0YWEwMGQiLCJlbWFpbCI6ImwyQGlnLmNvbSIsImlhdCI6MTc1MjE5NjU5OSwiZXhwIjoxNzU0Nzg4NTk5fQ.NkIsaLRN_ggvd2qxrycKQ2wFdYMinfBLhzHpmzdGGX0
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyZTczZGY2Mi0yMmQxLTRlZmUtYmY5OS1hZDhlZGI5N2VmNGEiLCJlbWFpbCI6ImwzQGlnLmNvbSIsImlhdCI6MTc1MjE5NjY1NCwiZXhwIjoxNzU0Nzg4NjU0fQ.K7lcrKkyFYrxgnBQ8BYl9rHOwdgKMhMYdVdXGYAMhlk
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjNGMwZmM2Yi01ZTI3LTQ1MTktOWEzOS1hNmY4NmI2ZTAyZWQiLCJlbWFpbCI6Imw0QGlnLmNvbiIsImlhdCI6MTc1MjE5Njc1MiwiZXhwIjoxNzU0Nzg4NzUyfQ.8W9Sf1jFKMiK_CL2fKTFhE2yka9lj-0wLXdQOTeJ3mo
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlNmU3MTM5Mi1mMzFkLTQ1OWQtOWNhNC1hNDA5ZDk5ZTliODkiLCJlbWFpbCI6ImwxQGlnLmNvbSIsImlhdCI6MTc1MjE5NjkzOSwiZXhwIjoxNzU0Nzg4OTM5fQ.7lHyBYa2-Pzd4RxyipfSqji4_LaxvFUNznON8YeeK0k
+AUTH MIDDLEWARE EXECUTED!
+Auth header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlNmU3MTM5Mi1mMzFkLTQ1OWQtOWNhNC1hNDA5ZDk5ZTliODkiLCJlbWFpbCI6ImwxQGlnLmNvbSIsImlhdCI6MTc1MjE5NzAwOSwiZXhwIjoxNzU0Nzg5MDA5fQ.WDNPBqAp-GROrmftKy8U6nyTTh_7ROye2MrsFFHera4

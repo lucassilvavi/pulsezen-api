@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: pulsezen-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pulsezen_dev
+      POSTGRES_USER: pulsezen
+      POSTGRES_PASSWORD: pulsezen123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - pulsezen-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulsezen -d pulsezen_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Cache and Session Storage
+  redis:
+    image: redis:7-alpine
+    container_name: pulsezen-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pulsezen-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin for Database Management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pulsezen-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pulsezen.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - pulsezen-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Elasticsearch for Full-text Search (opcional)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: pulsezen-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - pulsezen-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+networks:
+  pulsezen-network:
+    driver: bridge
