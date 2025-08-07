@@ -81,7 +81,7 @@
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.2.0",
     "jsonwebtoken": "^9.0.2",
-    "luxon": "^2.5.2",
+    "luxon": "^3.7.1",
     "mysql2": "^3.14.1",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",

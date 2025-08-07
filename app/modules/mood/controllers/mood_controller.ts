@@ -16,6 +16,7 @@ export default class MoodController {
    */
   async store({ auth, request, response }: HttpContext) {
     try {
+     
       // Validate request data
       const data = await request.validateUsing(createMoodEntryValidator)
       
