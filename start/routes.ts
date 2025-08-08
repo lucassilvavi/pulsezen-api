@@ -9,6 +9,7 @@
 
 import router from '@adonisjs/core/services/router'
 import HealthController from '#controllers/health_controller'
+import BiometricAuthsController from '#controllers/biometric_auths_controller'
 import AuthController from '#modules/auth/controllers/auth_controller'
 import JournalController from '#modules/journal/controllers/journal_controller'
 import MusicController from '#modules/music/controllers/music_controller'
@@ -45,6 +46,11 @@ router.group(() => {
     router.post('/login', [AuthController, 'login'])
     router.post('/refresh-token', [AuthController, 'refreshToken'])
     router.post('/validate-password', [AuthController, 'validatePassword'])
+    
+    // Biometric authentication routes (public endpoints)
+    router.post('/biometric/login', [BiometricAuthsController, 'biometricLogin'])
+    router.post('/backup-code/login', [BiometricAuthsController, 'backupCodeLogin'])
+    router.post('/device/capabilities', [BiometricAuthsController, 'checkDeviceCapabilities'])
   }).prefix('/auth').middleware([middleware.rate_limit()])
 
   // Protected authentication routes
@@ -52,6 +58,17 @@ router.group(() => {
   router.put('/auth/profile', [AuthController, 'updateProfile']).middleware([middleware.auth()])
   router.post('/auth/complete-onboarding', [AuthController, 'completeOnboarding']).middleware([middleware.auth()])
   router.post('/auth/logout', [AuthController, 'logout']).middleware([middleware.auth()])
+
+  // Protected biometric routes (require authentication)
+  router.group(() => {
+    router.post('/device/register', [BiometricAuthsController, 'registerDevice'])
+    router.get('/devices', [BiometricAuthsController, 'getDevices'])
+    router.post('/biometric/enable', [BiometricAuthsController, 'enableBiometric'])
+    router.get('/stats', [BiometricAuthsController, 'getAuthStats'])
+    router.delete('/device/:deviceId', [BiometricAuthsController, 'revokeDevice'])
+    router.post('/backup-codes/generate', [BiometricAuthsController, 'generateBackupCodes'])
+    router.get('/backup-codes', [BiometricAuthsController, 'getBackupCodes'])
+  }).prefix('/auth').middleware([middleware.auth()])
 
   // Journal routes
   router.group(() => {

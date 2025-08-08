@@ -285,8 +285,10 @@ export default class AuthController {
 
       return response.json({
         success: true,
-        message: 'Onboarding completed successfully',
-        profile: profile.serialize()
+        data: {
+          profile: profile.serialize()
+        },
+        message: 'Onboarding completed successfully'
       })
     } catch (error) {
       console.error('Complete onboarding error:', error)
