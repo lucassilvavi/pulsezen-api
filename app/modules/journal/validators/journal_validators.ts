@@ -5,61 +5,53 @@ import vine from '@vinejs/vine'
  */
 export const createJournalEntryValidator = vine.compile(
   vine.object({
-    title: vine
-      .string()
-      .maxLength(500)
-      .optional(),
     content: vine
       .string()
       .minLength(1)
       .maxLength(50000), // 50k characters limit
-    promptId: vine
+    prompt_id: vine
       .string()
       .uuid()
       .optional(),
-    customPrompt: vine
+    prompt_category: vine
+      .string()
+      .minLength(1)
+      .maxLength(100),
+    custom_prompt: vine
       .string()
       .maxLength(1000)
       .optional(),
-    moodTagIds: vine
-      .array(vine.string().uuid())
+    mood_tags: vine
+      .array(vine.object({
+        id: vine.string(),
+        label: vine.string(),
+        emoji: vine.string(),
+        category: vine.enum(['positive', 'negative', 'neutral']),
+        intensity: vine.number().min(1).max(5),
+        hexColor: vine.string()
+      }))
       .optional(),
-    category: vine
-      .string()
-      .maxLength(100)
-      .optional(),
-    subcategory: vine
-      .string()
-      .maxLength(100)
-      .optional(),
-    privacy: vine
-      .object({
-        level: vine
-          .enum(['private', 'shared', 'public']),
-        shareWithTherapist: vine
-          .boolean()
-      })
+    privacy_level: vine
+      .enum(['private', 'shared', 'anonymous'])
       .optional(),
     metadata: vine
       .object({
         deviceType: vine
-          .enum(['phone', 'tablet', 'web']),
+          .string()
+          .maxLength(50)
+          .optional(),
         timezone: vine
           .string()
-          .maxLength(50),
-        location: vine
-          .object({
-            city: vine.string().maxLength(100),
-            country: vine.string().maxLength(100)
-          })
+          .maxLength(50)
           .optional(),
-        writingSession: vine
-          .object({
-            startTime: vine.string(), // ISO date string
-            endTime: vine.string(), // ISO date string
-            pauseCount: vine.number().min(0),
-            revisionCount: vine.number().min(0)
-          })
+        writingDuration: vine
+          .number()
+          .min(0)
+          .optional(),
+        revisionCount: vine
+          .number()
+          .min(0)
+          .optional()
       })
       .optional()
   })
@@ -70,32 +62,58 @@ export const createJournalEntryValidator = vine.compile(
  */
 export const updateJournalEntryValidator = vine.compile(
   vine.object({
-    title: vine
-      .string()
-      .maxLength(500)
-      .optional(),
     content: vine
       .string()
       .minLength(1)
       .maxLength(50000)
       .optional(),
-    moodTagIds: vine
-      .array(vine.string().uuid())
-      .optional(),
-    category: vine
+    prompt_id: vine
       .string()
+      .uuid()
+      .optional(),
+    prompt_category: vine
+      .string()
+      .minLength(1)
       .maxLength(100)
       .optional(),
-    subcategory: vine
+    custom_prompt: vine
       .string()
-      .maxLength(100)
+      .maxLength(1000)
       .optional(),
-    privacy: vine
+    mood_tags: vine
+      .array(vine.object({
+        id: vine.string(),
+        label: vine.string(),
+        emoji: vine.string(),
+        category: vine.enum(['positive', 'negative', 'neutral']),
+        intensity: vine.number().min(1).max(5),
+        hexColor: vine.string()
+      }))
+      .optional(),
+    privacy_level: vine
+      .enum(['private', 'shared', 'anonymous'])
+      .optional(),
+    is_favorite: vine
+      .boolean()
+      .optional(),
+    metadata: vine
       .object({
-        level: vine
-          .enum(['private', 'shared', 'public']),
-        shareWithTherapist: vine
-          .boolean()
+        deviceType: vine
+          .string()
+          .maxLength(50)
+          .optional(),
+        timezone: vine
+          .string()
+          .maxLength(50)
+          .optional(),
+        writingDuration: vine
+          .number()
+          .min(0)
+          .optional(),
+        revisionCount: vine
+          .number()
+          .min(0)
+          .optional()
       })
       .optional()
   })
@@ -104,7 +122,7 @@ export const updateJournalEntryValidator = vine.compile(
 /**
  * Validator for entry filters
  */
-export const getEntriesFiltersValidator = vine.compile(
+export const journalEntriesQueryValidator = vine.compile(
   vine.object({
     limit: vine
       .number()
@@ -115,81 +133,34 @@ export const getEntriesFiltersValidator = vine.compile(
       .number()
       .min(0)
       .optional(),
-    page: vine
-      .number()
-      .min(1)
+    start_date: vine
+      .string()
+      .optional(), // ISO date string
+    end_date: vine
+      .string()
+      .optional(), // ISO date string
+    categories: vine
+      .string() // comma-separated
       .optional(),
-    startDate: vine
-      .string()
-      .optional(), // ISO date string
-    endDate: vine
-      .string()
-      .optional(), // ISO date string
-    category: vine
-      .string()
-      .maxLength(100)
+    privacy_level: vine
+      .string() // comma-separated
+      .optional(),
+    is_favorite: vine
+      .boolean()
       .optional(),
     search: vine
       .string()
       .maxLength(500)
       .optional(),
-    moodTags: vine
-      .string() // comma-separated UUIDs
-      .optional()
-  })
-)
-
-/**
- * Validator for prompt filters
- */
-export const getPromptsFiltersValidator = vine.compile(
-  vine.object({
-    category: vine
-      .string()
-      .maxLength(100)
-      .optional(),
-    difficulty: vine
-      .enum(['easy', 'medium', 'hard'])
-      .optional(),
-    type: vine
-      .enum(['standard', 'guided', 'creative', 'therapeutic'])
-      .optional(),
-    language: vine
-      .string()
-      .maxLength(10)
-      .optional(),
-    excludeUsed: vine
-      .boolean()
-      .optional()
-  })
-)
-
-/**
- * Validator for search entries
- */
-export const searchEntriesValidator = vine.compile(
-  vine.object({
-    query: vine
-      .string()
-      .minLength(1)
-      .maxLength(500),
-    category: vine
-      .string()
-      .maxLength(100)
-      .optional(),
-    dateRange: vine
-      .object({
-        start: vine.string(), // ISO date
-        end: vine.string() // ISO date
-      })
-      .optional(),
-    moodTags: vine
-      .array(vine.string().uuid())
-      .optional(),
-    limit: vine
+    sentiment_min: vine
       .number()
-      .min(1)
-      .max(50)
+      .min(-1)
+      .max(1)
+      .optional(),
+    sentiment_max: vine
+      .number()
+      .min(-1)
+      .max(1)
       .optional()
   })
 )
@@ -199,23 +170,10 @@ export const searchEntriesValidator = vine.compile(
  */
 export const journalStatsValidator = vine.compile(
   vine.object({
-    period: vine
-      .enum(['week', 'month', 'quarter', 'year'])
-      .optional(),
-    startDate: vine
-      .string()
-      .optional(),
-    endDate: vine
-      .string()
-      .optional(),
-    includeWordCount: vine
-      .boolean()
-      .optional(),
-    includeMoodTrends: vine
-      .boolean()
-      .optional(),
-    includeStreaks: vine
-      .boolean()
+    days: vine
+      .number()
+      .min(1)
+      .max(365)
       .optional()
   })
 )

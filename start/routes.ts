@@ -12,9 +12,9 @@ import HealthController from '#controllers/health_controller'
 import BiometricAuthsController from '#controllers/biometric_auths_controller'
 import AuthController from '#modules/auth/controllers/auth_controller'
 import JournalController from '#modules/journal/controllers/journal_controller'
-import MusicController from '#modules/music/controllers/music_controller'
 import MoodController from '#modules/mood/controllers/mood_controller'
 import MoodAnalyticsController from '#modules/mood/controllers/mood_analytics_controller'
+import CrisisPredictionController from '#controllers/CrisisPredictionController'
 import { middleware } from '#start/kernel'
 
 // Health check routes (no authentication required)
@@ -34,8 +34,8 @@ router.group(() => {
         auth: '/api/v1/auth',
         journal: '/api/v1/journal',
         breathing: '/api/v1/breathing',
-        music: '/api/v1/music',
-        mood: '/api/v1/mood'
+        mood: '/api/v1/mood',
+        crisis: '/api/v1/crisis'
       }
     }
   })
@@ -94,30 +94,6 @@ router.group(() => {
   //   // Breathing routes implementation
   // }).prefix('/breathing') // .middleware('auth')
 
-  // Music routes
-  router.group(() => {
-    // Public routes (no auth needed)
-    router.get('/categories', [MusicController, 'getCategories'])
-    router.get('/categories/:id', [MusicController, 'getCategoryById'])
-    router.get('/tracks', [MusicController, 'getTracks'])
-    router.get('/tracks/:id', [MusicController, 'getTrackById'])
-    
-    // Protected routes (require auth)
-    router.group(() => {
-      // Playlist operations
-      router.get('/playlists', [MusicController, 'getPlaylists'])
-      router.post('/playlists', [MusicController, 'createPlaylist'])
-      router.put('/playlists/:id', [MusicController, 'updatePlaylist'])
-      router.delete('/playlists/:id', [MusicController, 'deletePlaylist'])
-      router.post('/playlists/:id/tracks', [MusicController, 'addTracksToPlaylist'])
-      router.delete('/playlists/:id/tracks', [MusicController, 'removeTracksFromPlaylist'])
-      
-      // Favorites operations
-      router.get('/favorites', [MusicController, 'getFavorites'])
-      router.post('/favorites/toggle/:trackId', [MusicController, 'toggleFavorite'])
-    }).middleware([middleware.auth()])
-  }).prefix('/music')
-
   // Mood routes
   router.group(() => {
     // All mood routes require authentication
@@ -150,5 +126,25 @@ router.group(() => {
       middleware.mood_sanitization()
     ])
   }).prefix('/mood')
+
+  // Crisis Prediction Engine routes
+  router.group(() => {
+    // All crisis prediction routes require authentication
+    router.group(() => {
+      // Main prediction endpoints
+      router.post('/predict', [CrisisPredictionController, 'predict']) // Generate new prediction
+      router.get('/prediction/latest', [CrisisPredictionController, 'getLatest']) // Get latest prediction
+      router.get('/predictions/history', [CrisisPredictionController, 'getHistory']) // Get prediction history
+      
+      // Analytics and statistics
+      router.get('/stats', [CrisisPredictionController, 'getStats']) // Get prediction statistics
+      
+      // Admin endpoints (future use)
+      router.put('/config', [CrisisPredictionController, 'updateConfig']) // Update algorithm config
+    }).middleware([
+      middleware.auth(),
+      middleware.rate_limit()
+    ])
+  }).prefix('/crisis')
 
 }).prefix('/api/v1')
