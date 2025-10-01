@@ -252,27 +252,162 @@ export class JournalService {
       const entries = await JournalEntry.query()
         .where('user_id', userId)
         .whereNull('deleted_at')
-        .select(['word_count', 'created_at'])
+        .select(['word_count', 'created_at', 'mood_tags', 'sentiment_score', 'metadata'])
+        .orderBy('created_at', 'desc')
 
-      const uniqueDays = new Set(
+      if (entries.length === 0) {
+        return {
+          totalEntries: 0,
+          uniqueDays: 0,
+          totalWords: 0,
+          avgWordsPerEntry: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          percentPositive: 0,
+          moodDistribution: [],
+          weeklyProgress: [],
+          moodTimeline: []
+        }
+      }
+
+      // Estatísticas básicas
+      const uniqueDaysSet = new Set(
         entries.map(entry => entry.createdAt.toFormat('yyyy-MM-dd'))
-      ).size
-
+      )
+      const uniqueDays = uniqueDaysSet.size
       const totalWords = entries.reduce((sum, entry) => sum + (entry.wordCount || 0), 0)
+      const avgWordsPerEntry = Math.round(totalWords / entries.length)
+
+      // Calcular streaks (sequência de dias)
+      const sortedDates = Array.from(uniqueDaysSet).sort().reverse()
+      let currentStreak = 0
+      let longestStreak = 0
+      let tempStreak = 0
+      
+      const today = DateTime.now().toFormat('yyyy-MM-dd')
+      const yesterday = DateTime.now().minus({ days: 1 }).toFormat('yyyy-MM-dd')
+      
+      // Verificar streak atual
+      if (sortedDates[0] === today || sortedDates[0] === yesterday) {
+        let checkDate = DateTime.now()
+        for (const date of sortedDates) {
+          if (date === checkDate.toFormat('yyyy-MM-dd')) {
+            currentStreak++
+            checkDate = checkDate.minus({ days: 1 })
+          } else {
+            break
+          }
+        }
+      }
+
+      // Calcular streak mais longa
+      for (let i = 0; i < sortedDates.length; i++) {
+        tempStreak = 1
+        let currentDate = DateTime.fromFormat(sortedDates[i], 'yyyy-MM-dd')
+        
+        for (let j = i + 1; j < sortedDates.length; j++) {
+          const nextExpectedDate = currentDate.minus({ days: 1 }).toFormat('yyyy-MM-dd')
+          if (sortedDates[j] === nextExpectedDate) {
+            tempStreak++
+            currentDate = DateTime.fromFormat(sortedDates[j], 'yyyy-MM-dd')
+          } else {
+            break
+          }
+        }
+        
+        longestStreak = Math.max(longestStreak, tempStreak)
+      }
+
+      // Análise de sentiment/positividade
+      const positiveEntries = entries.filter(entry => {
+        if (entry.sentimentScore && entry.sentimentScore > 0.1) return true
+        // Fallback: verificar mood tags positivos
+        if (entry.moodTags) {
+          const moodTags = typeof entry.moodTags === 'string' ? JSON.parse(entry.moodTags) : entry.moodTags
+          return moodTags.some((tag: any) => 
+            ['😊', '😄', '🥰', '😍', '🤗', '✨', '🌟', '💫', '🎉', '🌈'].includes(tag.emoji)
+          )
+        }
+        return false
+      })
+      const percentPositive = Math.round((positiveEntries.length / entries.length) * 100)
+
+      // Distribuição de humor (top 5)
+      const moodMap = new Map<string, number>()
+      entries.forEach(entry => {
+        if (entry.moodTags) {
+          const moodTags = typeof entry.moodTags === 'string' ? JSON.parse(entry.moodTags) : entry.moodTags
+          moodTags.forEach((tag: any) => {
+            const moodKey = `${tag.emoji} ${tag.label}`
+            moodMap.set(moodKey, (moodMap.get(moodKey) || 0) + 1)
+          })
+        }
+      })
+
+      const moodDistribution = Array.from(moodMap.entries())
+        .map(([mood, count]) => ({
+          mood,
+          count,
+          percentage: Math.round((count / entries.length) * 100)
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
+
+      // Progresso semanal (últimas 4 semanas)
+      const weeklyProgress = []
+      for (let i = 0; i < 4; i++) {
+        const weekStart = DateTime.now().minus({ weeks: i }).startOf('week')
+        const weekEnd = weekStart.endOf('week')
+        
+        const weekEntries = entries.filter(entry => {
+          const entryDate = entry.createdAt
+          return entryDate >= weekStart && entryDate <= weekEnd
+        })
+
+        weeklyProgress.unshift({
+          week: `Semana ${4 - i}`,
+          entries: weekEntries.length,
+          startDate: weekStart.toFormat('yyyy-MM-dd'),
+          endDate: weekEnd.toFormat('yyyy-MM-dd')
+        })
+      }
+
+      // Timeline de humor (últimos 14 dias)
+      const moodTimeline = entries
+        .slice(0, 14)
+        .map(entry => ({
+          date: entry.createdAt.toFormat('yyyy-MM-dd'),
+          mood: entry.sentimentScore ? Math.round(entry.sentimentScore * 4) + 6 : 7,
+          emoji: entry.moodTags ? (typeof entry.moodTags === 'string' ? JSON.parse(entry.moodTags) : entry.moodTags)[0]?.emoji || '😊' : '😊',
+          label: entry.createdAt.toFormat('dd/MM')
+        }))
+        .reverse()
 
       return {
         totalEntries: entries.length,
         uniqueDays,
-        averageWordsPerEntry: entries.length > 0 ? Math.round(totalWords / entries.length) : 0,
-        totalWords
+        totalWords,
+        avgWordsPerEntry,
+        currentStreak,
+        longestStreak,
+        percentPositive,
+        moodDistribution,
+        weeklyProgress,
+        moodTimeline
       }
     } catch (error) {
-      console.error('Error getting journal stats:', error)
+      console.error('Error getting journal analytics:', error)
       return {
         totalEntries: 0,
         uniqueDays: 0,
-        averageWordsPerEntry: 0,
-        totalWords: 0
+        totalWords: 0,
+        avgWordsPerEntry: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        percentPositive: 0,
+        moodDistribution: [],
+        weeklyProgress: [],
+        moodTimeline: []
       }
     }
   }

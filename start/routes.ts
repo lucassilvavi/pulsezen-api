@@ -12,6 +12,7 @@ import HealthController from '#controllers/health_controller'
 import BiometricAuthsController from '#controllers/biometric_auths_controller'
 import AuthController from '#modules/auth/controllers/auth_controller'
 import JournalController from '#modules/journal/controllers/journal_controller'
+import JournalAnalyticsController from '#modules/journal/controllers/journal_analytics_controller'
 import MoodController from '#modules/mood/controllers/mood_controller'
 import MoodAnalyticsController from '#modules/mood/controllers/mood_analytics_controller'
 import CrisisPredictionController from '#controllers/CrisisPredictionController'
@@ -83,6 +84,14 @@ router.group(() => {
       router.get('/search', [JournalController, 'search'])
       router.get('/search/suggestions', [JournalController, 'searchSuggestions'])
       router.get('/stats', [JournalController, 'getStats'])
+      
+      // Analytics routes
+      router.get('/analytics', [JournalAnalyticsController, 'getJournalAnalytics'])
+      router.get('/analytics/timeline', [JournalAnalyticsController, 'getTimelineData'])
+      router.get('/analytics/mood-distribution', [JournalAnalyticsController, 'getMoodDistribution'])
+      router.get('/analytics/streak', [JournalAnalyticsController, 'getStreakData'])
+      router.get('/analytics/report', [JournalAnalyticsController, 'generateTherapeuticReport'])
+      
       router.get('/:id', [JournalController, 'show'])
       router.put('/:id', [JournalController, 'update'])
       router.delete('/:id', [JournalController, 'destroy'])
