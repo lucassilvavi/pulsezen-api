@@ -45,7 +45,62 @@ CMD ["npm", "start"]
    DATABASE_URL=${{Postgres.DATABASE_URL}}
    ```
 
-## 2. Configuração de Database
+## 2. Configuração do Dockerfile
+
+O projeto possui dois Dockerfiles otimizados:
+
+### Dockerfile (Alpine - Recomendado)
+- **Base**: Node.js 18 Alpine Linux
+- **Tamanho**: ~150MB (menor)
+- **Performance**: Mais rápido para deploy
+- **Inclui**: Dependencies básicas + browser automation
+
+### Dockerfile.ubuntu (Ubuntu - Completo)
+- **Base**: Node.js 18 Bullseye (Debian)
+- **Tamanho**: ~800MB (maior)
+- **Compatibilidade**: Máxima compatibilidade
+- **Inclui**: Todos os pacotes apt para browser automation
+
+**Para usar o Dockerfile.ubuntu**, renomeie os arquivos:
+```bash
+mv Dockerfile Dockerfile.alpine
+mv Dockerfile.ubuntu Dockerfile
+```
+
+Ou use o script auxiliar:
+```bash
+# Usar Alpine (padrão, recomendado)
+./switch-dockerfile.sh alpine
+
+# Usar Ubuntu (máxima compatibilidade)
+./switch-dockerfile.sh ubuntu
+```
+
+## 3. Browser Automation Support
+
+### Pacotes Incluídos
+Ambos Dockerfiles incluem suporte completo para browser automation:
+
+**Alpine**: Dependencies básicas para Chromium/Puppeteer
+**Ubuntu**: Todos os pacotes apt necessários:
+- ca-certificates, fonts-liberation, gconf-service
+- libappindicator1, libasound2, libatk1.0-0
+- libc6, libcairo2, libcups2, libdbus-1-3
+- libexpat1, libfontconfig1, libgbm1, libgcc1
+- libgconf-2-4, libgdk-pixbuf2.0-0, libglib2.0-0
+- libgtk-3-0, libnspr4, libnss3, libpango-1.0-0
+- libpangocairo-1.0-0, libstdc++6, libx11-6
+- libx11-xcb1, libxcb1, libxcomposite1, libxcursor1
+- libxdamage1, libxext6, libxfixes3, libxi6
+- libxrandr2, libxrender1, libxss1, libxtst6
+- lsb-release, wget, xdg-utils, xvfb
+
+### Environment Variables
+```env
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser (Alpine)
+DISPLAY=:99
+```
 
 ### PostgreSQL no Railway
 - Railway oferece PostgreSQL managed

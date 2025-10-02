@@ -17,14 +17,19 @@
 - ✅ **Environment Variables**: `.env.example` atualizado
 - ✅ **Build Process**: Configurado com `--ignore-ts-errors`
 - ✅ **Scripts**: Setup automático com `setup.sh`
+- ✅ **Dockerfiles**: Alpine (150MB) e Ubuntu (800MB) com browser support
+- ✅ **Browser Automation**: Pacotes apt completos para Puppeteer/Playwright
 
 #### 📁 Arquivos Criados
-1. `RAILWAY_DEPLOY.md` - Guia completo de deploy
-2. `Dockerfile` - Container de produção
-3. `.github/workflows/deploy.yml` - Pipeline CI/CD
-4. `railway.json` - Configuração Railway
-5. `setup.sh` - Script de configuração automática
-6. `app/controllers/health_controller.ts` - Health checks
+1. **`RAILWAY_DEPLOY.md`** - Guia completo passo-a-passo
+2. **`Dockerfile`** - Container Alpine otimizado (~150MB)
+3. **`Dockerfile.ubuntu`** - Container Ubuntu com browser support (~800MB)
+4. **`.github/workflows/deploy.yml`** - Pipeline CI/CD automático
+5. **`railway.json`** - Configuração Railway
+6. **`setup.sh`** - Script de configuração automática
+7. **`switch-dockerfile.sh`** - Script para alternar entre Dockerfiles
+8. **`DEPLOY_SUMMARY.md`** - Resumo executivo
+9. **Health checks** - `/health`, `/ping`, `/info`
 
 ## 🚀 Como Fazer o Deploy
 
