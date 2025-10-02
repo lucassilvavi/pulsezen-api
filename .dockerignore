@@ -1,0 +1,7 @@
+# Teste rápido de build
+node_modules/
+build/
+coverage/
+.env
+.DS_Store
+*.log
