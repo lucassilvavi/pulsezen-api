@@ -16,6 +16,7 @@ import JournalAnalyticsController from '#modules/journal/controllers/journal_ana
 import MoodController from '#modules/mood/controllers/mood_controller'
 import MoodAnalyticsController from '#modules/mood/controllers/mood_analytics_controller'
 import CrisisPredictionController from '#controllers/CrisisPredictionController'
+import SuggestionController from '#modules/suggestions/controllers/suggestion_controller'
 import { middleware } from '#start/kernel'
 
 // Health check routes (no authentication required)
@@ -36,7 +37,8 @@ router.group(() => {
         journal: '/api/v1/journal',
         breathing: '/api/v1/breathing',
         mood: '/api/v1/mood',
-        crisis: '/api/v1/crisis'
+        crisis: '/api/v1/crisis',
+        suggestions: '/api/v1/suggestions'
       }
     }
   })
@@ -155,5 +157,25 @@ router.group(() => {
       middleware.rate_limit()
     ])
   }).prefix('/crisis')
+
+  // Suggestions routes
+  router.group(() => {
+    // All suggestion routes require authentication
+    router.group(() => {
+      // Daily suggestions
+      router.get('/daily', [SuggestionController, 'getDailySuggestions']) // Get daily suggestions (4 per day)
+      
+      // Individual suggestion operations
+      router.get('/:id', [SuggestionController, 'getSuggestion']) // Get specific suggestion content
+      router.post('/:userSuggestionId/read', [SuggestionController, 'markAsRead']) // Mark suggestion as read
+      router.post('/:userSuggestionId/rate', [SuggestionController, 'rateSuggestion']) // Rate a suggestion
+      
+      // User statistics
+      router.get('/stats', [SuggestionController, 'getStats']) // Get user suggestion statistics
+    }).middleware([
+      middleware.auth(),
+      middleware.rate_limit()
+    ])
+  }).prefix('/suggestions')
 
 }).prefix('/api/v1')
