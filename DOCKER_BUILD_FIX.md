@@ -34,15 +34,24 @@ npm warn config only Use `--omit=dev` to omit dev dependencies from the install.
 + python3 \
 + make \
 + g++ \
++ build-essential (Ubuntu)
 ```
 
-### 3. NPM Command Fix
+### 3. Build Process Fix
 ```diff
-- RUN npm ci --only=production
-+ RUN npm ci --omit=dev
+- RUN npm ci --omit=dev
++ RUN npm ci
++ RUN npm run build  
++ RUN npm ci --omit=dev && npm cache clean --force
 ```
 
-### 4. GitHub Actions
+### 4. Production Command
+```diff
+- CMD ["npm", "start"]
++ CMD ["node", "build/bin/server.js"]
+```
+
+### 5. GitHub Actions
 ```diff
 - node-version: '18'
 + node-version: '20'
@@ -50,37 +59,27 @@ npm warn config only Use `--omit=dev` to omit dev dependencies from the install.
 
 ## 🗂️ Arquivos Atualizados
 
-- ✅ `Dockerfile` - Node 20 + Python + build tools
-- ✅ `Dockerfile.ubuntu` - Node 20 + build-essential  
+- ✅ `Dockerfile` - Node 20 + Python + build process correto
+- ✅ `Dockerfile.ubuntu` - Node 20 + build-essential + build process  
 - ✅ `.github/workflows/deploy.yml` - Node 20
+- ✅ `.dockerignore` - Build otimizado
 - ✅ `RAILWAY_DEPLOY.md` - Documentação atualizada
 
-## 🧪 Teste Local
-
-```bash
-# Testar build local
-docker build -t pulsezen-api-test .
-
-# Se funcionar, fazer commit
-git add .
-git commit -m "🔧 Fix Docker build - Node 20 + build dependencies"
-git push
-```
-
-## 📋 Verificações
+## 🧪 Validações
 
 - ✅ Node.js 20 compatibility
 - ✅ Python/build tools para better-sqlite3
-- ✅ NPM flags atualizados
-- ✅ GitHub Actions workflow atualizado
-- ⏳ **Testando build local...**
+- ✅ Build process completo (dev deps → build → prod deps)
+- ✅ ts-node-maintained resolvido
+- ✅ Build local funcionando
+- ✅ **Push realizado - testando Railway agora**
 
-## 🎯 Próximo Deploy
+## 🎯 Railway Deploy
 
-Após as correções, o deploy deve funcionar sem erros:
+Agora o deploy deve funcionar corretamente:
 
-1. 🔧 Build local OK
-2. 🚀 Push para GitHub
-3. ⚡ GitHub Actions executa
-4. 🐳 Docker build sucesso
+1. ✅ Build local OK
+2. ✅ Push para GitHub realizado
+3. ⚡ GitHub Actions vai executar
+4. 🐳 Docker build deve funcionar
 5. 🚂 Deploy Railway automático
