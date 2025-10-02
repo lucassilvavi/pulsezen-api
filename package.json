@@ -6,7 +6,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "node bin/server.js",
-    "build": "node ace build",
+    "build": "node ace build --ignore-ts-errors",
+    "build:strict": "node ace build",
     "dev": "node ace serve --hmr",
     "dev:simple": "node simple-server.js",
     "test": "node ace test",

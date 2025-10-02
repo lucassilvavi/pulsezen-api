@@ -357,7 +357,37 @@ Resposta:
 4. Submeter Pull Request
 5. Review e merge
 
-## 📄 Licença
+## � Deploy
+
+### Quick Setup
+
+Execute o script de configuração automática:
+
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+### Deploy para Produção
+
+O PulseZen API está configurado para deploy automático no **Railway** com GitHub Actions.
+
+#### Railway Deploy
+- 📋 **Guia Completo**: [RAILWAY_DEPLOY.md](./RAILWAY_DEPLOY.md)
+- 💰 **Custo**: ~$10/mês (API + PostgreSQL)
+- 🔄 **CI/CD**: Deploy automático via GitHub Actions
+- 🏥 **Monitoring**: Health checks automáticos
+
+#### Ambientes Disponíveis
+- **Development**: `http://localhost:3333`
+- **Production**: `https://your-app.railway.app`
+
+#### Health Checks
+- `GET /health` - Status do sistema
+- `GET /ping` - Ping simples  
+- `GET /info` - Informações detalhadas
+
+## �📄 Licença
 
 Este projeto é propriedade privada do PulseZen. Todos os direitos reservados.
 

@@ -61,4 +61,11 @@ export default class HealthController {
       })
     }
   }
+
+  /**
+   * Simple ping endpoint
+   */
+  async ping({ response }: HttpContext) {
+    return response.ok({ message: 'pong', timestamp: new Date().toISOString() })
+  }
 }

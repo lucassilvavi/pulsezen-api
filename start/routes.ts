@@ -21,7 +21,7 @@ import { middleware } from '#start/kernel'
 
 // Health check routes (no authentication required)
 router.get('/health', [HealthController, 'check'])
-router.get('/info', [HealthController, 'info'])
+router.get('/ping', [HealthController, 'ping'])
 
 // API v1 routes
 router.group(() => {
