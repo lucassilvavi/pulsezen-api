@@ -1,4 +1,4 @@
-FROM node:18-bullseye
+FROM node:20-bullseye
 
 WORKDIR /app
 
@@ -46,6 +46,8 @@ RUN apt-get update && apt-get install -y \
     xvfb \
     postgresql-client \
     curl \
+    python3 \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Set environment variables for browser automation
@@ -54,7 +56,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy source code
 COPY . .

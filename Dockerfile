@@ -1,8 +1,8 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Install system dependencies for browser automation and other tools
+# Install system dependencies for browser automation and native modules
 RUN apk add --no-cache \
     postgresql-client \
     curl \
@@ -17,6 +17,9 @@ RUN apk add --no-cache \
     wqy-zenhei \
     xvfb \
     dbus \
+    python3 \
+    make \
+    g++ \
     && rm -rf /var/cache/apk/*
 
 # Set environment variables for browser automation
@@ -26,7 +29,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy source code
 COPY . .

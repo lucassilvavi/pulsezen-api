@@ -50,16 +50,16 @@ CMD ["npm", "start"]
 O projeto possui dois Dockerfiles otimizados:
 
 ### Dockerfile (Alpine - Recomendado)
-- **Base**: Node.js 18 Alpine Linux
+- **Base**: Node.js 20 Alpine Linux  
 - **Tamanho**: ~150MB (menor)
 - **Performance**: Mais rápido para deploy
-- **Inclui**: Dependencies básicas + browser automation
+- **Inclui**: Dependencies básicas + browser automation + Python/build tools
 
 ### Dockerfile.ubuntu (Ubuntu - Completo)
-- **Base**: Node.js 18 Bullseye (Debian)
+- **Base**: Node.js 20 Bullseye (Debian)
 - **Tamanho**: ~800MB (maior)
 - **Compatibilidade**: Máxima compatibilidade
-- **Inclui**: Todos os pacotes apt para browser automation
+- **Inclui**: Todos os pacotes apt + Python/build tools para native modules
 
 **Para usar o Dockerfile.ubuntu**, renomeie os arquivos:
 ```bash
