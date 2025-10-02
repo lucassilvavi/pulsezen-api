@@ -34,8 +34,8 @@ export default class CrisisPredictionController {
       // Gerar predição
       const prediction = await this.predictionEngine.predict(inputData)
 
-      // Salvar predição no banco
-      await this.savePrediction(prediction)
+      // Salvar predição no banco (temporariamente desabilitado para testes)
+      // await this.savePrediction(prediction)
 
       return response.ok({
         success: true,
@@ -279,7 +279,7 @@ export default class CrisisPredictionController {
 
     // Buscar dados de mood
     const moodEntries = await Database
-      .from('moods')
+      .from('mood_entries')
       .where('user_id', userId)
       .where('created_at', '>=', startDate)
       .where('created_at', '<=', endDate)

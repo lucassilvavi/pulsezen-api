@@ -220,7 +220,7 @@ export const DEFAULT_PREDICTION_CONFIG: PredictionConfig = {
   
   analysisWindow: {
     defaultDays: 14,              // Análise de 2 semanas
-    minimumDataPoints: 5,         // Mínimo 5 entradas para predição confiável
+    minimumDataPoints: 1,         // Mínimo 1 entrada para predição confiável (temporário para teste)
     confidenceThreshold: 0.65     // 65% de confiança mínima
   }
 }

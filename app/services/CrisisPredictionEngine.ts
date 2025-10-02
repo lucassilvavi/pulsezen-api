@@ -349,7 +349,8 @@ export class CrisisPredictionEngine {
 
     // Adicionar pontos de humor
     moodEntries.forEach(entry => {
-      const date = new Date(entry.timestamp).toISOString().split('T')[0]
+      const timestamp = typeof entry.timestamp === 'string' ? parseInt(entry.timestamp) : entry.timestamp
+      const date = new Date(timestamp).toISOString().split('T')[0]
       const existingPoint = timePoints.find(p => p.date === date)
       if (existingPoint) {
         existingPoint.mood = this.moodLevelToNumber(entry.moodLevel)
@@ -550,9 +551,14 @@ export class CrisisPredictionEngine {
 
   private moodLevelToNumber(moodLevel: string): number {
     const moodMap: { [key: string]: number } = {
+      'pessimo': 1,
+      'mal': 2,
+      'neutro': 3,
+      'bem': 4,
+      'excelente': 5,
+      // Mantém compatibilidade com formato antigo
       'muito_ruim': 1,
       'ruim': 2,
-      'neutro': 3,
       'bom': 4,
       'muito_bom': 5
     }
