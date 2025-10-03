@@ -20,8 +20,10 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "db:migrate": "node ace migration:run",
+    "db:migrate:prod": "node build/bin/console.js migration:run --force",
     "db:rollback": "node ace migration:rollback",
     "db:seed": "node ace db:seed",
+    "db:seed:prod": "node build/bin/console.js db:seed --force",
     "db:fresh": "node ace migration:fresh --seed",
     "setup": "npm run db:migrate && npm run db:seed"
   },

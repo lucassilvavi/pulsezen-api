@@ -7,6 +7,5 @@ healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
-# Comando de inicialização que roda migrações antes de iniciar o servidor
-# Usa os arquivos compilados (build/) em vez dos arquivos TypeScript
-startCommand = "sh -c 'node build/bin/console.js migration:run --force && node bin/server.js'"
+# Inicia apenas o servidor - migrações serão executadas via script separado
+startCommand = "node bin/server.js"
