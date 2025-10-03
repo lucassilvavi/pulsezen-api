@@ -6,6 +6,3 @@ healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
-
-# Inicia apenas o servidor - migrações serão executadas via script separado
-startCommand = "node bin/server.js"
