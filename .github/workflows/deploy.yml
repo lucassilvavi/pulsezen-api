@@ -64,25 +64,3 @@ jobs:
         service: ${{ secrets.RAILWAY_SERVICE_ID }}
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
-    - name: Wait for deployment
-      run: sleep 30
-
-    - name: Run Database Migrations
-      uses: railway-app/railway@v1
-      with:
-        railway-token: ${{ secrets.RAILWAY_TOKEN }}
-        service: ${{ secrets.RAILWAY_SERVICE_ID }}
-        command: "node ace migration:run"
-      env:
-        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
-    - name: Run Database Seeds
-      uses: railway-app/railway@v1  
-      with:
-        railway-token: ${{ secrets.RAILWAY_TOKEN }}
-        service: ${{ secrets.RAILWAY_SERVICE_ID }}
-        command: "node ace db:seed"
-      env:
-        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      continue-on-error: true

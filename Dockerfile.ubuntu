@@ -73,18 +73,18 @@ RUN mkdir -p uploads
 # Set default environment variables for Railway
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
-    PORT=3333 \
     LOG_LEVEL=info \
     DB_CONNECTION=postgres \
+    DB_SSL_ENABLED=true \
     APP_KEY=default-app-key-change-in-production \
     JWT_SECRET=default-jwt-secret-change-in-production
 
-# Expose port
-EXPOSE 3333
+# Expose port (Railway will set PORT automatically)
+EXPOSE $PORT
 
-# Health check with longer timeout for Railway
+# Health check with Railway port
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-  CMD curl -f http://localhost:3333/health || exit 1
+  CMD curl -f http://localhost:$PORT/health || exit 1
 
 # Start the application using the built version
 CMD ["node", "build/bin/server.js"]

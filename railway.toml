@@ -1,0 +1,11 @@
+[build]
+builder = "dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Comando de inicialização que roda migrações antes de iniciar o servidor
+startCommand = "sh -c 'node ace migration:run --force && node bin/server.js'"
