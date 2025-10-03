@@ -73,7 +73,7 @@ jobs:
       with:
         railway-token: ${{ secrets.RAILWAY_TOKEN }}
         service: ${{ secrets.RAILWAY_SERVICE_ID }}
-        command: "node build/bin/console.js migration:run"
+        command: "node ace migration:run"
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
@@ -82,7 +82,7 @@ jobs:
       with:
         railway-token: ${{ secrets.RAILWAY_TOKEN }}
         service: ${{ secrets.RAILWAY_SERVICE_ID }}
-        command: "node build/bin/console.js db:seed"
+        command: "node ace db:seed"
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       continue-on-error: true
