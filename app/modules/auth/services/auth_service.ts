@@ -87,8 +87,16 @@ export class AuthService {
         emailVerified: false
       })
 
-      // Create initial profile
+      // Create initial profile with name data
       const profile = await user.getOrCreateProfile()
+      
+      // Update profile with firstName and lastName if provided
+      if (data.firstName || data.lastName) {
+        await profile.merge({
+          firstName: data.firstName || null,
+          lastName: data.lastName || null
+        }).save()
+      }
 
       // Generate token pair
       const tokens = await this.generateTokenPair(userId, data.email, deviceInfo)

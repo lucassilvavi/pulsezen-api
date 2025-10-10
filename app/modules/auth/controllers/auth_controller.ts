@@ -333,6 +333,7 @@ export default class AuthController {
       if (data.firstName !== undefined) profile.firstName = data.firstName
       if (data.lastName !== undefined) profile.lastName = data.lastName
       if (data.displayName !== undefined) profile.displayName = data.displayName
+      if (data.dateOfBirth !== undefined) profile.dateOfBirth = data.dateOfBirth
       if (data.sex !== undefined) profile.sex = data.sex
       if (data.age !== undefined) profile.age = data.age
       if (data.goals !== undefined) profile.goals = data.goals
