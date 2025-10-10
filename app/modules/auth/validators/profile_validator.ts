@@ -7,11 +7,7 @@ export const updateProfileValidator = vine.compile(
     displayName: vine.string().optional(),
     dateOfBirth: vine.string().optional(),
     sex: vine.enum(['MENINO', 'MENINA', 'OTHER']).optional(),
-    age: vine.number().min(1).max(120).optional(),
-    goals: vine.array(vine.string()).optional(),
-    experienceLevel: vine.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']).optional(),
-    avatarUrl: vine.string().url().optional(),
-    preferences: vine.object({}).optional()
+    avatarUrl: vine.string().url().optional()
   })
 )
 

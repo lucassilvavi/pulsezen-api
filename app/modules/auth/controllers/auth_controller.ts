@@ -333,22 +333,19 @@ export default class AuthController {
       if (data.firstName !== undefined) profile.firstName = data.firstName
       if (data.lastName !== undefined) profile.lastName = data.lastName
       if (data.displayName !== undefined) profile.displayName = data.displayName
-      if (data.dateOfBirth !== undefined) profile.dateOfBirth = data.dateOfBirth
+      if (data.dateOfBirth !== undefined) profile.dateOfBirth = DateTime.fromISO(data.dateOfBirth)
       if (data.sex !== undefined) profile.sex = data.sex
-      if (data.age !== undefined) profile.age = data.age
-      if (data.goals !== undefined) profile.goals = data.goals
-      if (data.experienceLevel !== undefined) profile.experienceLevel = data.experienceLevel
       if (data.avatarUrl !== undefined) profile.avatarUrl = data.avatarUrl
-      if (data.preferences !== undefined) profile.preferences = data.preferences
-
+      
       await profile.save()
+      const responseData = {
+        user: user.serialize(),
+        profile: profile.serialize()
+      }
 
       return response.json({
         success: true,
-        data: {
-          user: user.serialize(),
-          profile: profile.serialize()
-        },
+        data: responseData,
         message: 'Profile updated successfully'
       })
     } catch (error) {
