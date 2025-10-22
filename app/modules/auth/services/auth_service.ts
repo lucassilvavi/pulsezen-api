@@ -6,6 +6,7 @@ import crypto from 'crypto'
 import env from '#start/env'
 import User from '#models/user'
 import RefreshToken from '#models/refresh_token'
+import MoodEntry from '#models/mood_entry'
 import { StructuredLogger } from '#services/structured_logger'
 
 export interface CreateUserData {
@@ -226,12 +227,37 @@ export class AuthService {
   }
 
   /**
-   * Generate JWT token
+   * Generate JWT token with mood data
    */
-  static generateToken(userId: string, email: string): string {
+  static async generateToken(userId: string, email: string): Promise<string> {
+    // Get today's mood data for all periods
+    const today = DateTime.now().startOf('day').toISO()
+    const tomorrow = DateTime.now().startOf('day').plus({ days: 1 }).toISO()
+    
+    const moodEntries = await MoodEntry.query()
+      .where('user_id', userId)
+      .where('created_at', '>=', today)
+      .where('created_at', '<', tomorrow)
+      .select('period')
+    
+    // Create mood status object
+    const moodStatus = {
+      manha: false,
+      tarde: false,
+      noite: false
+    }
+    
+    // Mark periods that have entries
+    moodEntries.forEach(entry => {
+      if (entry.period in moodStatus) {
+        moodStatus[entry.period as keyof typeof moodStatus] = true
+      }
+    })
+
     const payload = {
       userId,
       email,
+      moodStatus, // Add mood data to token
       iat: Math.floor(Date.now() / 1000)
     }
 
@@ -246,7 +272,7 @@ export class AuthService {
    */
   static async generateTokenPair(userId: string, email: string, deviceInfo?: any): Promise<TokenPair> {
     // Generate short-lived access token
-    const accessToken = this.generateToken(userId, email)
+    const accessToken = await this.generateToken(userId, email)
     
     // Generate long-lived refresh token
     const refreshTokenId = uuidv4()

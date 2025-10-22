@@ -75,7 +75,7 @@ export default class AuthController {
         return response.status(401).json({
           success: false,
           error: result.message,
-          message: 'Login failed'
+          message: result.message // Use the specific message from AuthService
         })
       }
 

@@ -22,9 +22,9 @@ export default class MoodRateLimiterMiddleware {
   private static readonly rateLimits: RateLimitRules = {
     // POST entries: Mais restritivo - evitar spam de entradas
     'POST:/mood/entries': {
-      maxRequests: 3,
-      windowMs: 60 * 60 * 1000, // 1 hora por período (manhã, tarde, noite)
-      message: 'Limite de entradas de humor excedido. Máximo 3 por hora.',
+      maxRequests: 1000, // Aumentado para desenvolvimento
+      windowMs: 5 * 60 * 1000, // 5 minutos (reduzido para desenvolvimento)
+      message: 'Limite de entradas de humor excedido. Máximo 10 por 5 minutos.',
     },
     // GET stats: Moderado - permite consultas frequentes mas com limite
     'GET:/mood/stats': {
