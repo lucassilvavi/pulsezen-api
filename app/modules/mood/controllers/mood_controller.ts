@@ -62,6 +62,28 @@ export default class MoodController {
         period
       })
 
+      // 🔮 Regenerar predição automaticamente após criar entrada de mood
+      setImmediate(async () => {
+        try {
+          const CrisisPredictionController = (await import('#controllers/CrisisPredictionController')).default
+          const predictionController = new CrisisPredictionController()
+          
+          // Criar contexto HTTP simulado para o predict
+          const predictContext = { auth, request, response } as HttpContext
+          await predictionController.predict(predictContext)
+          
+          StructuredLogger.info('✅ Predição regenerada automaticamente após mood entry', {
+            userId: auth.userId,
+            entryId: result.entry?.id
+          })
+        } catch (error) {
+          StructuredLogger.error('Erro ao regenerar predição após mood entry', {
+            userId: auth.userId,
+            error: error.message
+          })
+        }
+      })
+
       return response.status(201).json({
         success: true,
         data: {
