@@ -44,8 +44,6 @@ export default class CrisisPredictionController {
       })
 
     } catch (error) {
-      console.error('Erro ao gerar predição:', error)
-      
       return response.badRequest({
         success: false,
         error: error.message || 'Erro interno do servidor',
@@ -60,56 +58,39 @@ export default class CrisisPredictionController {
    */
   async getLatest({ auth, response }: HttpContext) {
     try {
-      console.log('🔍 Iniciando getLatest...')
-      
       const userId = auth?.userId
       if (!userId) {
-        console.log('❌ Usuário não autenticado')
         return response.unauthorized({ error: 'Usuário não autenticado' })
       }
-
-      console.log('👤 User ID:', userId)
 
       const prediction = await Database
         .from('predictions')
         .where('user_id', userId)
-        .where('expires_at', '>', new Date())
         .orderBy('created_at', 'desc')
         .first()
 
-      console.log('📊 Prediction found:', prediction ? 'SIM' : 'NÃO')
-      
       if (!prediction) {
-        console.log('❌ Nenhuma predição encontrada')
         return response.notFound({
           success: false,
           message: 'Nenhuma predição válida encontrada'
         })
       }
 
-      console.log('🔄 Parsing JSON fields...')
-      console.log('Factors:', prediction.factors)
-      console.log('Interventions:', prediction.interventions)
-
-      // Parse JSON fields
+      // JSONB fields são retornados automaticamente como objetos pelo PostgreSQL
+      // Não precisa fazer JSON.parse()
       const parsedPrediction = {
         ...prediction,
-        factors: prediction.factors ? JSON.parse(prediction.factors) : {},
-        interventions: prediction.interventions ? JSON.parse(prediction.interventions) : [],
-        previous_prediction: prediction.previous_prediction 
-          ? JSON.parse(prediction.previous_prediction) 
-          : null
+        factors: prediction.factors || {},
+        interventions: prediction.interventions || [],
+        previous_prediction: prediction.previous_prediction || null
       }
 
-      console.log('✅ Retornando predição')
       return response.ok({
         success: true,
         data: parsedPrediction
       })
 
     } catch (error) {
-      console.error('❌ Erro ao buscar predição:', error)
-      
       return response.internalServerError({
         success: false,
         error: 'Erro interno do servidor'
@@ -136,14 +117,12 @@ export default class CrisisPredictionController {
         .orderBy('created_at', 'desc')
         .paginate(page, limit)
 
-      // Parse JSON fields
+      // JSONB fields são retornados automaticamente como objetos pelo PostgreSQL
       const parsedPredictions = predictions.map(prediction => ({
         ...prediction,
-        factors: prediction.factors ? JSON.parse(prediction.factors) : {},
-        interventions: prediction.interventions ? JSON.parse(prediction.interventions) : [],
-        previous_prediction: prediction.previous_prediction 
-          ? JSON.parse(prediction.previous_prediction) 
-          : null
+        factors: prediction.factors || {},
+        interventions: prediction.interventions || [],
+        previous_prediction: prediction.previous_prediction || null
       }))
 
       return response.ok({
@@ -157,8 +136,6 @@ export default class CrisisPredictionController {
       })
 
     } catch (error) {
-      console.error('Erro ao buscar histórico:', error)
-      
       return response.internalServerError({
         success: false,
         error: 'Erro interno do servidor'
@@ -212,8 +189,6 @@ export default class CrisisPredictionController {
       })
 
     } catch (error) {
-      console.error('Erro ao calcular estatísticas:', error)
-      
       return response.internalServerError({
         success: false,
         error: 'Erro interno do servidor'
@@ -260,8 +235,6 @@ export default class CrisisPredictionController {
       })
 
     } catch (error) {
-      console.error('Erro ao atualizar configuração:', error)
-      
       return response.internalServerError({
         success: false,
         error: 'Erro interno do servidor'
