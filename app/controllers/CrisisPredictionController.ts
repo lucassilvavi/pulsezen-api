@@ -84,7 +84,6 @@ export default class CrisisPredictionController {
         ...prediction,
         factors: JSON.parse(prediction.factors),
         interventions: JSON.parse(prediction.interventions),
-        analysis_window: JSON.parse(prediction.analysis_window),
         previous_prediction: prediction.previous_prediction 
           ? JSON.parse(prediction.previous_prediction) 
           : null
@@ -129,7 +128,6 @@ export default class CrisisPredictionController {
         ...prediction,
         factors: JSON.parse(prediction.factors),
         interventions: JSON.parse(prediction.interventions),
-        analysis_window: JSON.parse(prediction.analysis_window),
         previous_prediction: prediction.previous_prediction 
           ? JSON.parse(prediction.previous_prediction) 
           : null

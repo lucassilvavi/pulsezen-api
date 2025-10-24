@@ -44,10 +44,7 @@ export class CrisisPredictionEngine {
       const riskLevel = this.determineRiskLevel(riskScore)
       
       // Cálculo de confiança do algoritmo
-      const rawConfidenceScore = this.calculateConfidenceScore(inputData, factors)
-      console.log('🔍 Raw confidence score:', rawConfidenceScore, typeof rawConfidenceScore)
-      const validConfidenceScore = Math.max(0.300, Math.min(1.000, Number(rawConfidenceScore.toFixed(3))))
-      console.log('🔍 Valid confidence score:', validConfidenceScore, typeof validConfidenceScore)
+      const confidenceScore = this.calculateConfidenceScore(inputData, factors)
       
       // Seleção de intervenções apropriadas
       const interventions = this.selectInterventions(factors, riskLevel)
@@ -60,7 +57,7 @@ export class CrisisPredictionEngine {
         userId: inputData.userId,
         riskScore: Math.max(0.000, Math.min(1.000, Number(riskScore.toFixed(3)))),
         riskLevel,
-        confidenceScore: validConfidenceScore,
+        confidenceScore: Math.max(0.300, Math.min(1.000, Number(confidenceScore.toFixed(3)))),
         factors,
         interventions,
         algorithmVersion: this.version,
