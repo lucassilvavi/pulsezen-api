@@ -82,8 +82,8 @@ export default class CrisisPredictionController {
       // Parse JSON fields
       const parsedPrediction = {
         ...prediction,
-        factors: JSON.parse(prediction.factors),
-        interventions: JSON.parse(prediction.interventions),
+        factors: prediction.factors ? JSON.parse(prediction.factors) : {},
+        interventions: prediction.interventions ? JSON.parse(prediction.interventions) : [],
         previous_prediction: prediction.previous_prediction 
           ? JSON.parse(prediction.previous_prediction) 
           : null
@@ -126,8 +126,8 @@ export default class CrisisPredictionController {
       // Parse JSON fields
       const parsedPredictions = predictions.map(prediction => ({
         ...prediction,
-        factors: JSON.parse(prediction.factors),
-        interventions: JSON.parse(prediction.interventions),
+        factors: prediction.factors ? JSON.parse(prediction.factors) : {},
+        interventions: prediction.interventions ? JSON.parse(prediction.interventions) : [],
         previous_prediction: prediction.previous_prediction 
           ? JSON.parse(prediction.previous_prediction) 
           : null
