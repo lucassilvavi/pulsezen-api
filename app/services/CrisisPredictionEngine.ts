@@ -4,6 +4,7 @@
  * Baseado em análise de humor, sentiment analysis e padrões comportamentais
  */
 
+import { randomUUID } from 'crypto'
 import { 
   CrisisPrediction, 
   PredictionInputData, 
@@ -43,7 +44,10 @@ export class CrisisPredictionEngine {
       const riskLevel = this.determineRiskLevel(riskScore)
       
       // Cálculo de confiança do algoritmo
-      const confidenceScore = this.calculateConfidenceScore(inputData, factors)
+      const rawConfidenceScore = this.calculateConfidenceScore(inputData, factors)
+      console.log('🔍 Raw confidence score:', rawConfidenceScore, typeof rawConfidenceScore)
+      const validConfidenceScore = Math.max(0.300, Math.min(1.000, Number(rawConfidenceScore.toFixed(3))))
+      console.log('🔍 Valid confidence score:', validConfidenceScore, typeof validConfidenceScore)
       
       // Seleção de intervenções apropriadas
       const interventions = this.selectInterventions(factors, riskLevel)
@@ -52,11 +56,11 @@ export class CrisisPredictionEngine {
       const previousPrediction = await this.getPreviousPrediction(inputData.userId)
 
       const prediction: CrisisPrediction = {
-        id: `pred_${Date.now()}_${inputData.userId}`,
+        id: randomUUID(),  // Gera UUID válido para o banco
         userId: inputData.userId,
-        riskScore: Number(riskScore.toFixed(3)),
+        riskScore: Math.max(0.000, Math.min(1.000, Number(riskScore.toFixed(3)))),
         riskLevel,
-        confidenceScore: Number(confidenceScore.toFixed(3)),
+        confidenceScore: validConfidenceScore,
         factors,
         interventions,
         algorithmVersion: this.version,
@@ -302,8 +306,10 @@ export class CrisisPredictionEngine {
     // Calcular distribuição temporal
     const entriesByDate: { [key: string]: number } = {}
     journalEntries.forEach(entry => {
-      const date = entry.createdAt.split('T')[0]
-      entriesByDate[date] = (entriesByDate[date] || 0) + 1
+      if (entry.createdAt) {  // Verificação de segurança
+        const date = entry.createdAt.split('T')[0]
+        entriesByDate[date] = (entriesByDate[date] || 0) + 1
+      }
     })
 
     const daysWithEntries = Object.keys(entriesByDate).length
@@ -361,12 +367,14 @@ export class CrisisPredictionEngine {
 
     // Adicionar pontos de sentiment
     journalEntries.forEach(entry => {
-      const date = entry.createdAt.split('T')[0]
-      const existingPoint = timePoints.find(p => p.date === date)
-      if (existingPoint) {
-        existingPoint.sentiment = entry.sentimentScore
-      } else {
-        timePoints.push({ date, sentiment: entry.sentimentScore })
+      if (entry.createdAt) {  // Verificação de segurança
+        const date = entry.createdAt.split('T')[0]
+        const existingPoint = timePoints.find(p => p.date === date)
+        if (existingPoint) {
+          existingPoint.sentiment = entry.sentimentScore
+        } else {
+          timePoints.push({ date, sentiment: entry.sentimentScore })
+        }
       }
     })
 
@@ -455,7 +463,9 @@ export class CrisisPredictionEngine {
       totalWeight += factor.weight
     })
 
-    return Math.min(1, weightedScore / Math.max(totalWeight, 1))
+    const finalScore = totalWeight > 0 ? weightedScore / totalWeight : 0
+    const validScore = isNaN(finalScore) ? 0.1 : finalScore
+    return Math.max(0.000, Math.min(1.000, validScore))
   }
 
   /**
@@ -501,7 +511,10 @@ export class CrisisPredictionEngine {
     confidenceFactors += consistencyConfidence
     maxConfidence += 0.25
 
-    return Math.max(0.3, confidenceFactors / maxConfidence) // Mínimo 30%
+    // Garantir um valor válido (temporário para debug)
+    const finalConfidence = maxConfidence > 0 ? confidenceFactors / maxConfidence : 0.3
+    const finalResult = isNaN(finalConfidence) ? 0.5 : finalConfidence
+    return Math.max(0.300, Math.min(1.000, finalResult)) // Garantir entre 0.3 e 1.0
   }
 
   /**

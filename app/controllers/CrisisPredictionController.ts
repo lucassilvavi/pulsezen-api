@@ -34,8 +34,8 @@ export default class CrisisPredictionController {
       // Gerar predição
       const prediction = await this.predictionEngine.predict(inputData)
 
-      // Salvar predição no banco (temporariamente desabilitado para testes)
-      // await this.savePrediction(prediction)
+      // Salvar predição no banco
+      await this.savePrediction(prediction)
 
       return response.ok({
         success: true,
@@ -311,13 +311,7 @@ export default class CrisisPredictionController {
         factors: JSON.stringify(prediction.factors),
         interventions: JSON.stringify(prediction.interventions),
         algorithm_version: prediction.algorithmVersion,
-        data_points_analyzed: prediction.dataPointsAnalyzed,
-        analysis_window: JSON.stringify(prediction.analysisWindow),
         expires_at: prediction.expiresAt,
-        next_update_at: prediction.nextUpdateAt,
-        previous_prediction: prediction.previousPrediction 
-          ? JSON.stringify(prediction.previousPrediction)
-          : null,
         created_at: prediction.createdAt,
         updated_at: prediction.updatedAt
       })

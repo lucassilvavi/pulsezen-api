@@ -142,7 +142,7 @@ export interface PredictionConfig {
   }
   
   analysisWindow: {
-    defaultDays: number          // 14 days
+    defaultDays: number          // 180 days (6 months)
     minimumDataPoints: number    // Minimum entries required
     confidenceThreshold: number  // Minimum confidence for valid prediction
   }
@@ -219,8 +219,8 @@ export const DEFAULT_PREDICTION_CONFIG: PredictionConfig = {
   },
   
   analysisWindow: {
-    defaultDays: 14,              // Análise de 2 semanas
-    minimumDataPoints: 1,         // Mínimo 1 entrada para predição confiável (temporário para teste)
+    defaultDays: 180,             // Análise de 6 meses para dados mais robustos
+    minimumDataPoints: 3,         // Mínimo 3 entradas para predição confiável
     confidenceThreshold: 0.65     // 65% de confiança mínima
   }
 }
