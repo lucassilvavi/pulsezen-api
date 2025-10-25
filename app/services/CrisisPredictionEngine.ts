@@ -129,7 +129,10 @@ export class CrisisPredictionEngine {
     }
 
     // Converter mood levels para valores numéricos
-    const moodValues = moodEntries.map(entry => this.moodLevelToNumber(entry.moodLevel))
+    // Nota: Database.from() retorna campos em snake_case
+    const moodValues = moodEntries.map(entry => 
+      this.moodLevelToNumber(entry.mood_level ?? entry.moodLevel)
+    )
     const averageMood = moodValues.reduce((sum, val) => sum + val, 0) / moodValues.length
 
     // Análise de tendência nos últimos 7 dias vs primeiros 7 dias
@@ -168,9 +171,13 @@ export class CrisisPredictionEngine {
     }
 
     // Calcular sentiment médio (ignorar valores null)
+    // Nota: Database.from() retorna campos em snake_case
     const validSentiments = journalEntries
-      .filter(entry => entry.sentimentScore !== null)
-      .map(entry => entry.sentimentScore)
+      .filter(entry => {
+        const score = entry.sentiment_score ?? entry.sentimentScore
+        return score !== null && score !== undefined
+      })
+      .map(entry => entry.sentiment_score ?? entry.sentimentScore)
 
     if (validSentiments.length === 0) {
       return {
@@ -355,10 +362,11 @@ export class CrisisPredictionEngine {
       const timestamp = typeof entry.timestamp === 'string' ? parseInt(entry.timestamp) : entry.timestamp
       const date = new Date(timestamp).toISOString().split('T')[0]
       const existingPoint = timePoints.find(p => p.date === date)
+      const moodLevel = entry.mood_level ?? entry.moodLevel
       if (existingPoint) {
-        existingPoint.mood = this.moodLevelToNumber(entry.moodLevel)
+        existingPoint.mood = this.moodLevelToNumber(moodLevel)
       } else {
-        timePoints.push({ date, mood: this.moodLevelToNumber(entry.moodLevel) })
+        timePoints.push({ date, mood: this.moodLevelToNumber(moodLevel) })
       }
     })
 
@@ -367,10 +375,11 @@ export class CrisisPredictionEngine {
       if (entry.createdAt) {  // Verificação de segurança
         const date = entry.createdAt.split('T')[0]
         const existingPoint = timePoints.find(p => p.date === date)
+        const sentimentScore = entry.sentiment_score ?? entry.sentimentScore
         if (existingPoint) {
-          existingPoint.sentiment = entry.sentimentScore
+          existingPoint.sentiment = sentimentScore
         } else {
-          timePoints.push({ date, sentiment: entry.sentimentScore })
+          timePoints.push({ date, sentiment: sentimentScore })
         }
       }
     })
