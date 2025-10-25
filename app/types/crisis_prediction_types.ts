@@ -204,18 +204,18 @@ export const CRISIS_DEFINITIONS: CrisisDefinition[] = [
 export const DEFAULT_PREDICTION_CONFIG: PredictionConfig = {
   version: '1.0',
   weights: {
-    moodWeight: 0.30,        // Mood tracking é o mais importante
-    sentimentWeight: 0.25,   // Análise de sentiment do journal
+    sentimentWeight: 0.35,   // Análise de sentiment do journal (PRIORIDADE - mais informação)
+    moodWeight: 0.25,        // Mood tracking diário
     stressKeywordWeight: 0.20, // Palavras-chave de stress
-    frequencyWeight: 0.15,   // Frequência de entradas
+    frequencyWeight: 0.10,   // Frequência de entradas
     trendWeight: 0.10        // Tendência temporal
   },
   
   thresholds: {
-    lowRisk: 0.30,     // 0-30% = baixo risco
-    mediumRisk: 0.60,  // 30-60% = risco médio
-    highRisk: 0.80,    // 60-80% = alto risco
-    criticalRisk: 1.00 // 80-100% = risco crítico
+    lowRisk: 0.25,     // 0-25% = baixo risco (realmente estável)
+    mediumRisk: 0.45,  // 25-45% = risco médio (atenção necessária)
+    highRisk: 0.70,    // 45-70% = alto risco (intervenção recomendada)
+    criticalRisk: 1.00 // 70-100% = risco crítico (intervenção urgente)
   },
   
   analysisWindow: {

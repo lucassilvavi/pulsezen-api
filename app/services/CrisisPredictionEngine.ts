@@ -172,12 +172,16 @@ export class CrisisPredictionEngine {
 
     // Calcular sentiment médio (ignorar valores null)
     // Nota: Database.from() retorna campos em snake_case
+    // IMPORTANTE: PostgreSQL NUMERIC vira string no JS, precisamos converter para número
     const validSentiments = journalEntries
       .filter(entry => {
         const score = entry.sentiment_score ?? entry.sentimentScore
         return score !== null && score !== undefined
       })
-      .map(entry => entry.sentiment_score ?? entry.sentimentScore)
+      .map(entry => {
+        const score = entry.sentiment_score ?? entry.sentimentScore
+        return typeof score === 'string' ? parseFloat(score) : score
+      })
 
     if (validSentiments.length === 0) {
       return {
@@ -186,7 +190,7 @@ export class CrisisPredictionEngine {
         currentValue: 0,
         threshold: -0.3,
         trend: 'stable',
-        description: 'Sentiment não calculado para entradas de journal'
+        description: 'Sentimento não calculado para entradas de journal'
       }
     }
 
@@ -206,7 +210,7 @@ export class CrisisPredictionEngine {
       type: 'negative_sentiment',
       weight: this.config.weights.sentimentWeight,
       currentValue: Number(averageSentiment.toFixed(3)),
-      threshold: -0.3, // Abaixo de -0.3 é negativo
+      threshold: -0.2, // Abaixo de -0.2 já indica negatividade preocupante
       trend,
       description: `Sentiment médio: ${averageSentiment.toFixed(2)} (${validSentiments.length} entradas)`
     }
@@ -434,9 +438,16 @@ export class CrisisPredictionEngine {
           break
 
         case 'negative_sentiment':
-          // Sentiment: valor negativo = alto risco
-          // Normalizar: 1.0 = 0 risco, -1.0 = 1.0 risco
-          factorScore = Math.max(0, Math.min(1, (-factor.currentValue + 1) / 2))
+          // Sentiment: quanto mais negativo, maior o risco
+          // Normalizar: 0.0 = 0.5 risco, -1.0 = 1.0 risco, +1.0 = 0 risco
+          // Qualquer valor negativo já indica algum risco
+          if (factor.currentValue >= 0) {
+            factorScore = 0 // Sentiment positivo = sem risco
+          } else {
+            // Sentiment negativo: quanto mais negativo, mais risco
+            // -0.1 = 0.55, -0.2 = 0.60, -0.5 = 0.75, -1.0 = 1.0
+            factorScore = Math.min(1, 0.5 + Math.abs(factor.currentValue) * 0.5)
+          }
           break
 
         case 'stress_keywords':
