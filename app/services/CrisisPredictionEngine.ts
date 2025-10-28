@@ -437,21 +437,26 @@ export class CrisisPredictionEngine {
 
         case 'negative_sentiment':
           // Sentiment: quanto mais negativo, maior o risco
-          // Normalizar: 0.0 = 0.5 risco, -1.0 = 1.0 risco, +1.0 = 0 risco
-          // Qualquer valor negativo já indica algum risco
-          if (factor.currentValue >= 0) {
+          // Sentiment POSITIVO (+0.5 a +1.0) = sem risco
+          // Sentiment NEUTRO (0.0 a +0.1) = risco mínimo
+          // Sentiment NEGATIVO (-0.1 a -1.0) = risco crescente
+          if (factor.currentValue >= 0.1) {
             factorScore = 0 // Sentiment positivo = sem risco
+          } else if (factor.currentValue >= 0) {
+            // Neutro: 0 a 0.1 = risco baixo (0-20%)
+            factorScore = 0.2
           } else {
-            // Sentiment negativo: quanto mais negativo, mais risco
-            // -0.1 = 0.55, -0.2 = 0.60, -0.5 = 0.75, -1.0 = 1.0
-            factorScore = Math.min(1, 0.5 + Math.abs(factor.currentValue) * 0.5)
+            // Negativo: escala linear de 0 a -1.0
+            // -0.1 = 0.3, -0.2 = 0.4, -0.5 = 0.7, -1.0 = 1.0
+            factorScore = Math.min(1, 0.2 + Math.abs(factor.currentValue) * 0.8)
           }
           break
 
         case 'stress_keywords':
           // Palavras-chave: mais palavras = maior risco
-          // Normalizar: 0 = 0 risco, 10+ = 1.0 risco
-          factorScore = Math.min(1, factor.currentValue / 10)
+          // Mais sensível: 0 = 0%, 0.2 = 20%, 0.5 = 50%, 1.0+ = 100%
+          // A presença de qualquer palavra de stress já é significativa
+          factorScore = Math.min(1, factor.currentValue)
           break
 
         case 'journal_frequency':
