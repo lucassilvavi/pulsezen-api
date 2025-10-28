@@ -13,9 +13,7 @@ import {
   PredictionConfig,
   CrisisIntervention,
   DEFAULT_PREDICTION_CONFIG,
-  CRISIS_DEFINITIONS,
-  CRISIS_INTERVENTIONS,
-  PredictionFactorType
+  CRISIS_INTERVENTIONS
 } from '../types/crisis_prediction_types.js'
 
 export class CrisisPredictionEngine {
@@ -321,7 +319,7 @@ export class CrisisPredictionEngine {
     })
 
     const daysWithEntries = Object.keys(entriesByDate).length
-    const activeDaysRatio = daysWithEntries / windowDays
+    // const activeDaysRatio = daysWithEntries / windowDays // TODO: usar em cálculo futuro
 
     // Análise de tendência: primeiros 7 vs últimos 7 dias
     const now = new Date()
@@ -393,7 +391,7 @@ export class CrisisPredictionEngine {
 
     if (timePoints.length < 3) {
       return {
-        type: 'mood_decline',
+        type: 'temporal_trend',
         weight: this.config.weights.trendWeight,
         currentValue: 0,
         threshold: -0.1,
@@ -410,7 +408,7 @@ export class CrisisPredictionEngine {
     else if (trendScore < -0.1) trend = 'declining'
 
     return {
-      type: 'mood_decline',
+      type: 'temporal_trend',
       weight: this.config.weights.trendWeight,
       currentValue: Number(trendScore.toFixed(3)),
       threshold: -0.1, // Tendência negativa é preocupante
@@ -671,7 +669,7 @@ export class CrisisPredictionEngine {
     return difference > 0 ? 'worsening' : 'improving'
   }
 
-  private async getPreviousPrediction(userId: string): Promise<CrisisPrediction | null> {
+  private async getPreviousPrediction(_userId: string): Promise<CrisisPrediction | null> {
     // Este método seria implementado para buscar a predição anterior do banco
     // Por enquanto retorna null (primeira implementação)
     return null

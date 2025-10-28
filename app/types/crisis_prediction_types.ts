@@ -5,7 +5,7 @@
 
 // Core prediction types
 export type CrisisRiskLevel = 'low' | 'medium' | 'high' | 'critical'
-export type PredictionFactorType = 'mood_decline' | 'stress_keywords' | 'sleep_pattern' | 'social_isolation' | 'negative_sentiment' | 'journal_frequency'
+export type PredictionFactorType = 'mood_decline' | 'stress_keywords' | 'sleep_pattern' | 'social_isolation' | 'negative_sentiment' | 'journal_frequency' | 'temporal_trend'
 
 // Crisis definition based on multiple indicators
 export interface CrisisDefinition {
