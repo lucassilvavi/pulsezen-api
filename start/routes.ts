@@ -10,6 +10,7 @@
 import router from '@adonisjs/core/services/router'
 import HealthController from '#controllers/health_controller'
 import BiometricAuthsController from '#controllers/biometric_auths_controller'
+import PasswordResetController from '#controllers/password_reset_controller'
 import AuthController from '#modules/auth/controllers/auth_controller'
 import JournalController from '#modules/journal/controllers/journal_controller'
 import JournalAnalyticsController from '#modules/journal/controllers/journal_analytics_controller'
@@ -55,6 +56,13 @@ router.group(() => {
     router.post('/backup-code/login', [BiometricAuthsController, 'backupCodeLogin'])
     router.post('/device/capabilities', [BiometricAuthsController, 'checkDeviceCapabilities'])
   }).prefix('/auth').middleware([middleware.rate_limit()])
+
+  // Password reset routes (no auth required)
+  router.group(() => {
+    router.post('/request', [PasswordResetController, 'requestReset']) // Request password reset
+    router.get('/validate', [PasswordResetController, 'validateToken']) // Validate reset token
+    router.post('/reset', [PasswordResetController, 'resetPassword']) // Reset password with token
+  }).prefix('/password-reset').middleware([middleware.rate_limit()])
 
   // Protected authentication routes
   router.get('/auth/profile', [AuthController, 'profile']).middleware([middleware.auth()])
