@@ -166,7 +166,7 @@ export class AuthService {
           ipAddress: deviceInfo?.ipAddress,
           riskLevel: 'medium'
         })
-        return { success: false, message: 'Invalid credentials' }
+        return { success: false, message: 'Email ou senha inválida.' }
       }
 
       // Verify password
@@ -180,7 +180,7 @@ export class AuthService {
           ipAddress: deviceInfo?.ipAddress,
           riskLevel: 'high'
         })
-        return { success: false, message: 'Invalid credentials' }
+        return { success: false, message: 'Email ou senha inválida.' }
       }
 
       // Get or create profile if it doesn't exist
@@ -221,12 +221,12 @@ export class AuthService {
       })
       return { 
         success: false, 
-        message: 'Login failed' 
+        message: 'Error ao fazer login, tente novamente!' 
       }
     }
   }
 
-  /**
+  /** 
    * Generate JWT token with mood data
    */
   static async generateToken(userId: string, email: string): Promise<string> {

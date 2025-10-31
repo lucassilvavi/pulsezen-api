@@ -14,6 +14,9 @@ export default class PasswordResetToken extends BaseModel {
   declare token: string
 
   @column()
+  declare code: string | null
+
+  @column()
   declare email: string
 
   @column.dateTime()

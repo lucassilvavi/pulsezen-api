@@ -60,8 +60,10 @@ router.group(() => {
   // Password reset routes (no auth required)
   router.group(() => {
     router.post('/request', [PasswordResetController, 'requestReset']) // Request password reset
-    router.get('/validate', [PasswordResetController, 'validateToken']) // Validate reset token
-    router.post('/reset', [PasswordResetController, 'resetPassword']) // Reset password with token
+    router.get('/validate', [PasswordResetController, 'validateToken']) // Validate reset token (web)
+    router.post('/reset', [PasswordResetController, 'resetPassword']) // Reset password with token (web)
+    router.post('/verify-code', [PasswordResetController, 'verifyCode']) // Verify 6-digit code (mobile)
+    router.post('/reset-with-code', [PasswordResetController, 'resetWithCode']) // Reset password with code (mobile)
   }).prefix('/password-reset').middleware([middleware.rate_limit()])
 
   // Protected authentication routes
