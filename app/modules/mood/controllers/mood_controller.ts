@@ -9,6 +9,8 @@ import {
 import MoodEntry from '../../../models/mood_entry.js'
 import { StructuredLogger } from '../../../services/structured_logger.js'
 import type { MoodLevel, MoodPeriod } from '../../../types/mood_types.js'
+import { AuthService } from '../../auth/services/auth_service.js'
+import User from '../../../models/user.js'
 
 export default class MoodController {
   /**
@@ -84,6 +86,15 @@ export default class MoodController {
         }
       })
 
+      // 🔄 Gerar novo token com moodStatus atualizado
+      const user = await User.findOrFail(auth.userId)
+      const newToken = await AuthService.generateToken(user.id, user.email)
+
+      StructuredLogger.info('Token atualizado após mood entry', {
+        userId: auth.userId,
+        period: result.entry!.period
+      })
+
       return response.status(201).json({
         success: true,
         data: {
@@ -99,6 +110,7 @@ export default class MoodController {
           created_at: result.entry!.createdAt.toISO(),
           updated_at: result.entry!.updatedAt.toISO()
         },
+        token: newToken, // Novo token com moodStatus atualizado
         message: result.message
       })
     } catch (error) {

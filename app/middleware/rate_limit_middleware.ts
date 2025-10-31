@@ -30,9 +30,9 @@ export default class RateLimitMiddleware {
 
   // Mood-specific rate limits (more restrictive for POST operations)
   private static readonly MOOD_RATE_LIMITS: Record<string, UserRateLimitConfig> = {
-    'POST:/api/v1/mood/entries': { windowMs: 60 * 60 * 1000, maxRequests: 3, tier: 'basic' }, // 3 per hour
-    'GET:/api/v1/mood/stats': { windowMs: 60 * 60 * 1000, maxRequests: 60, tier: 'basic' }, // 60 per hour
-    'GET:/api/v1/mood/trend': { windowMs: 60 * 60 * 1000, maxRequests: 30, tier: 'basic' }, // 30 per hour
+    'POST:/api/v1/mood/entries': { windowMs: 60 * 60 * 1000, maxRequests: 30, tier: 'basic' }, // 30 per hour
+    'GET:/api/v1/mood/stats': { windowMs: 60 * 60 * 1000, maxRequests: 1000, tier: 'basic' }, // 1000 per hour
+    'GET:/api/v1/mood/trend': { windowMs: 60 * 60 * 1000, maxRequests: 1000, tier: 'basic' }, // 1000 per hour
   }
 
   /**
