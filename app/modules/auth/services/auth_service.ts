@@ -99,8 +99,8 @@ export class AuthService {
         }).save()
       }
 
-      // Generate token pair
-      const tokens = await this.generateTokenPair(userId, data.email, deviceInfo)
+      // Generate token pair with onboarding status (false for new users)
+      const tokens = await this.generateTokenPair(userId, data.email, deviceInfo, false)
 
       StructuredLogger.security('User registration successful', {
         eventType: 'auth_success',
@@ -120,7 +120,7 @@ export class AuthService {
           id: user.id,
           email: user.email,
           emailVerified: user.emailVerified,
-          onboardingComplete: profileData.onboardingCompleted,
+          onboardingComplete: profileData.onboardingCompleted, // Map from onboardingCompleted to onboardingComplete for app compatibility
           profile: profileData
         },
         token: tokens.accessToken,
@@ -186,8 +186,8 @@ export class AuthService {
       // Get or create profile if it doesn't exist
       const profile = await user.getOrCreateProfile()
 
-      // Generate token pair
-      const tokens = await this.generateTokenPair(user.id, user.email, deviceInfo)
+      // Generate token pair with current onboarding status
+      const tokens = await this.generateTokenPair(user.id, user.email, deviceInfo, profile.onboardingCompleted)
 
       StructuredLogger.security('User login successful', {
         eventType: 'auth_success',
@@ -207,7 +207,7 @@ export class AuthService {
           id: user.id,
           email: user.email,
           emailVerified: user.emailVerified,
-          onboardingComplete: profileData.onboardingCompleted,
+          onboardingComplete: profileData.onboardingCompleted, // Map from onboardingCompleted to onboardingComplete for app compatibility
           profile: profileData
         },
         token: tokens.accessToken,
@@ -227,9 +227,9 @@ export class AuthService {
   }
 
   /** 
-   * Generate JWT token with mood data
+   * Generate JWT token with mood data and onboarding status
    */
-  static async generateToken(userId: string, email: string): Promise<string> {
+  static async generateToken(userId: string, email: string, onboardingComplete: boolean = false): Promise<string> {
     // Get today's mood data for all periods
     const today = DateTime.now().startOf('day').toISO()
     const tomorrow = DateTime.now().startOf('day').plus({ days: 1 }).toISO()
@@ -258,6 +258,7 @@ export class AuthService {
       userId,
       email,
       moodStatus, // Add mood data to token
+      onboardingComplete, // Add onboarding status to token for quick navigation decisions
       iat: Math.floor(Date.now() / 1000)
     }
 
@@ -270,9 +271,9 @@ export class AuthService {
   /**
    * Generate both access and refresh tokens
    */
-  static async generateTokenPair(userId: string, email: string, deviceInfo?: any): Promise<TokenPair> {
-    // Generate short-lived access token
-    const accessToken = await this.generateToken(userId, email)
+  static async generateTokenPair(userId: string, email: string, deviceInfo?: any, onboardingComplete: boolean = false): Promise<TokenPair> {
+    // Generate short-lived access token with onboarding status
+    const accessToken = await this.generateToken(userId, email, onboardingComplete)
     
     // Generate long-lived refresh token
     const refreshTokenId = uuidv4()
@@ -333,11 +334,20 @@ export class AuthService {
       refreshToken.lastUsedAt = DateTime.now()
       await refreshToken.save()
 
-      // Generate new token pair
+      // Get user profile to check onboarding status
+      const user = await User.query()
+        .where('id', refreshToken.userId)
+        .preload('profile')
+        .firstOrFail()
+      
+      const profile = await user.getOrCreateProfile()
+
+      // Generate new token pair with current onboarding status
       const newTokens = await this.generateTokenPair(
         refreshToken.userId, 
         refreshToken.user.email, 
-        deviceInfo
+        deviceInfo,
+        profile.onboardingCompleted
       )
 
       // Optionally revoke old refresh token (for security)

@@ -109,6 +109,7 @@ export default class UserProfile extends BaseModel {
       experienceLevel: this.experienceLevel,
       avatarUrl: this.avatarUrl,
       onboardingCompleted: this.onboardingCompleted,
+      onboardingComplete: this.onboardingCompleted, // Add for mobile app compatibility
       isOnboardingComplete: this.isOnboardingComplete,
       preferences: this.preferences,
       dateOfBirth: this.dateOfBirth,
