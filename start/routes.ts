@@ -29,7 +29,7 @@ router.group(() => {
   // Root endpoint
   router.get('/', async () => {
     return {
-      name: 'PulseZen API',
+      name: 'Acalmar API',
       version: '1.0.0',
       status: 'running',
       documentation: '/api/v1/docs',

@@ -1,12 +1,12 @@
-# 🚀 PulseZen API
+# 🚀 Acalmar API
 
-# 🚀 PulseZen API
+# 🚀 Acalmar API
 
-API backend para o aplicativo PulseZen - Uma plataforma de bem-estar mental com funcionalidades de SOS, Journal, Breathing e **Crisis Prediction Engine™**.
+API backend para o aplicativo Acalmar - Uma plataforma de bem-estar mental com funcionalidades de SOS, Journal, Breathing e **Crisis Prediction Engine™**.
 
 ## 🔮 **DESTAQUE: CRISIS PREDICTION ENGINE™**
 
-O PulseZen API possui um **diferencial único** no mercado: o **Crisis Prediction Engine™** - um sistema avançado de predição de crises de ansiedade baseado em machine learning e análise comportamental.
+O Acalmar API possui um **diferencial único** no mercado: o **Crisis Prediction Engine™** - um sistema avançado de predição de crises de ansiedade baseado em machine learning e análise comportamental.
 
 ### **🎯 Principais Características:**
 - **📊 Análise Multimodal**: Combina mood tracking + sentiment analysis + padrões comportamentais
