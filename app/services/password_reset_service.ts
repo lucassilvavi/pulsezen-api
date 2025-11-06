@@ -5,6 +5,7 @@ import User from '#models/user'
 import PasswordResetToken from '#models/password_reset_token'
 import mail from '@adonisjs/mail/services/main'
 import { StructuredLogger } from '#services/structured_logger'
+import { EmailErrorHandler } from '#services/email_error_handler'
 import env from '#start/env'
 
 export interface RequestPasswordResetResponse {
@@ -86,24 +87,46 @@ export default class PasswordResetService {
       // Send email with code
       StructuredLogger.info('Sending password reset email', { email: user.email, code })
       
-      await mail.send((message) => {
-        message
-          .to(user.email)
-          .from(env.get('SMTP_USERNAME'), 'PulseZen')
-          .subject('Recuperação de Senha - PulseZen')
-          .htmlView('emails/password_reset', {
-            userName: user.profile?.firstName || user.email,
-            code,
-            expiresIn: '1 hora'
-          })
-      })
+      try {
+        await mail.send((message) => {
+          message
+            .to(user.email)
+            .from(env.get('SMTP_USERNAME'), 'PulseZen')
+            .subject('Recuperação de Senha - PulseZen')
+            .htmlView('emails/password_reset', {
+              userName: user.profile?.firstName || user.email,
+              code,
+              expiresIn: '1 hora'
+            })
+        })
 
-      StructuredLogger.info('Password reset email sent successfully', {
-        userId: user.id,
-        email: user.email,
-        tokenId: resetToken.id,
-        code
-      })
+        StructuredLogger.info('Password reset email sent successfully', {
+          userId: user.id,
+          email: user.email,
+          tokenId: resetToken.id,
+          code
+        })
+      } catch (emailError) {
+        // Analyze the specific email error
+        const errorDetails = EmailErrorHandler.analyzeError(emailError)
+        EmailErrorHandler.logError(errorDetails, {
+          email: user.email,
+          userId: user.id,
+          smtpConfig: {
+            host: env.get('SMTP_HOST'),
+            port: env.get('SMTP_PORT'),
+            username: env.get('SMTP_USERNAME'),
+          }
+        })
+        
+        // Even if email fails, we still created the token, so return success
+        // This prevents user enumeration attacks
+        StructuredLogger.warn('Email failed but returning success to prevent enumeration', {
+          userId: user.id,
+          email: user.email,
+          errorType: errorDetails.type
+        })
+      }
 
       return {
         success: true,
