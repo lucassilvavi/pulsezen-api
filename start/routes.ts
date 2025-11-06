@@ -14,6 +14,7 @@ import PasswordResetController from '#controllers/password_reset_controller'
 import MailTestController from '#controllers/mail_test_controller'
 import SimpleTestController from '#controllers/simple_test_controller'
 import DirectMailTestController from '#controllers/direct_mail_test_controller'
+import SmtpDetailedTestController from '#controllers/smtp_detailed_test_controller'
 import AuthController from '#modules/auth/controllers/auth_controller'
 import JournalController from '#modules/journal/controllers/journal_controller'
 import JournalAnalyticsController from '#modules/journal/controllers/journal_analytics_controller'
@@ -39,6 +40,7 @@ router.group(() => {
   router.get('/env', [SimpleTestController, 'checkEnv']) // Check environment
   router.post('/password-reset', [SimpleTestController, 'testPasswordReset']) // Test password reset
   router.post('/direct-email', [DirectMailTestController, 'testDirectEmail']) // Test direct email sending
+  router.post('/smtp-detailed', [SmtpDetailedTestController, 'testSmtpConnection']) // Detailed SMTP test
 }).prefix('/debug')
 
 // API v1 routes
