@@ -98,6 +98,15 @@ export class EmailErrorHandler {
     StructuredLogger.error('Email error analyzed', {
       errorType: error.type,
       message: error.message,
+      originalErrorName: error.originalError?.name,
+      originalErrorMessage: error.originalError?.message,
+      originalErrorCode: error.originalError?.code,
+      originalErrorErrno: error.originalError?.errno,
+      originalErrorSyscall: error.originalError?.syscall,
+      originalErrorHostname: error.originalError?.hostname,
+      originalErrorCommand: error.originalError?.command,
+      originalErrorResponse: error.originalError?.response,
+      originalErrorResponseCode: error.originalError?.responseCode,
       suggestions: error.suggestions,
       context,
       originalError: {

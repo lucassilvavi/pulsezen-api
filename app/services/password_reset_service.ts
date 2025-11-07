@@ -84,11 +84,28 @@ export default class PasswordResetService {
       })
       StructuredLogger.info('Token created successfully', { tokenId: resetToken.id, code })
 
-      // Send email with code
+      // Send email with code - DETAILED LOGGING
       StructuredLogger.info('Sending password reset email', { email: user.email, code })
       
+      // Log SMTP configuration before sending
+      const smtpConfig = {
+        host: env.get('SMTP_HOST'),
+        port: env.get('SMTP_PORT'),
+        username: env.get('SMTP_USERNAME'),
+        passwordLength: env.get('SMTP_PASSWORD')?.length,
+        passwordFirst3: env.get('SMTP_PASSWORD')?.substring(0, 3),
+        passwordLast3: env.get('SMTP_PASSWORD')?.substring(env.get('SMTP_PASSWORD')?.length - 3),
+      }
+      StructuredLogger.info('SMTP config for email sending', smtpConfig)
+      
       try {
-        await mail.send((message) => {
+        StructuredLogger.info('Creating email message', {
+          to: user.email,
+          from: env.get('SMTP_USERNAME'),
+          subject: 'Recuperação de Senha - PulseZen'
+        })
+        
+        const mailResult = await mail.send((message) => {
           message
             .to(user.email)
             .from(env.get('SMTP_USERNAME'), 'PulseZen')
@@ -104,19 +121,26 @@ export default class PasswordResetService {
           userId: user.id,
           email: user.email,
           tokenId: resetToken.id,
-          code
+          code,
+          mailResult: JSON.stringify(mailResult)
         })
       } catch (emailError) {
+        // Log the raw error first
+        StructuredLogger.error('Raw email error occurred', {
+          errorName: emailError.name,
+          errorMessage: emailError.message,
+          errorCode: emailError.code,
+          errorStack: emailError.stack?.split('\n').slice(0, 5),
+          errorProps: Object.keys(emailError),
+          fullError: JSON.stringify(emailError, Object.getOwnPropertyNames(emailError))
+        })
+        
         // Analyze the specific email error
         const errorDetails = EmailErrorHandler.analyzeError(emailError)
         EmailErrorHandler.logError(errorDetails, {
           email: user.email,
           userId: user.id,
-          smtpConfig: {
-            host: env.get('SMTP_HOST'),
-            port: env.get('SMTP_PORT'),
-            username: env.get('SMTP_USERNAME'),
-          }
+          smtpConfig: smtpConfig
         })
         
         // Even if email fails, we still created the token, so return success
@@ -124,7 +148,8 @@ export default class PasswordResetService {
         StructuredLogger.warn('Email failed but returning success to prevent enumeration', {
           userId: user.id,
           email: user.email,
-          errorType: errorDetails.type
+          errorType: errorDetails.type,
+          errorMessage: errorDetails.message
         })
       }
 
