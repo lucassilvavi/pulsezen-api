@@ -3,8 +3,8 @@ import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import User from '#models/user'
 import PasswordResetToken from '#models/password_reset_token'
-import mail from '@adonisjs/mail/services/main'
 import { StructuredLogger } from '#services/structured_logger'
+import { SESEmailService } from '#services/ses_email_service'
 import env from '#start/env'
 
 export interface RequestPasswordResetResponse {
@@ -83,27 +83,45 @@ export default class PasswordResetService {
       })
       StructuredLogger.info('Token created successfully', { tokenId: resetToken.id, code })
 
-      // Send email with code
-      StructuredLogger.info('Sending password reset email', { email: user.email, code })
+      // Send email with code using AWS SES
+      StructuredLogger.info('Sending password reset email with AWS SES', { 
+        email: user.email, 
+        code,
+        userId: user.id 
+      })
       
-      await mail.send((message) => {
-        message
-          .to(user.email)
-          .from(env.get('SMTP_USERNAME'), 'PulseZen')
-          .subject('Recuperação de Senha - PulseZen')
-          .htmlView('emails/password_reset', {
-            userName: user.profile?.firstName || user.email,
-            code,
-            expiresIn: '1 hora'
-          })
-      })
+      try {
+        const emailResult = await SESEmailService.sendPasswordResetEmail(
+          user.email,
+          code,
+          user.profile?.firstName || user.email.split('@')[0]
+        )
 
-      StructuredLogger.info('Password reset email sent successfully', {
-        userId: user.id,
-        email: user.email,
-        tokenId: resetToken.id,
-        code
-      })
+        StructuredLogger.info('Password reset email sent successfully via AWS SES', {
+          userId: user.id,
+          email: user.email,
+          tokenId: resetToken.id,
+          code,
+          messageId: emailResult.messageId,
+          provider: emailResult.provider
+        })
+      } catch (emailError) {
+        StructuredLogger.error('AWS SES email failed', {
+          error: emailError.message,
+          errorCode: emailError.code || emailError.name,
+          userId: user.id,
+          email: user.email,
+          code
+        })
+        
+        // Even if email fails, we still created the token, so return success
+        // This prevents user enumeration attacks
+        StructuredLogger.warn('Email failed but returning success to prevent enumeration', {
+          userId: user.id,
+          email: user.email,
+          errorType: emailError.name || 'unknown'
+        })
+      }
 
       return {
         success: true,

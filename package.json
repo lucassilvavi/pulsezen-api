@@ -77,6 +77,7 @@
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.6.1",
     "@adonisjs/mail": "^9.2.2",
+    "@aws-sdk/client-ses": "^3.926.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/html-pdf-node": "^1.0.2",
     "@types/jsonwebtoken": "^9.0.10",
