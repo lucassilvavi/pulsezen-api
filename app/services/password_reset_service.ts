@@ -3,10 +3,9 @@ import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import User from '#models/user'
 import PasswordResetToken from '#models/password_reset_token'
-import mail from '@adonisjs/mail/services/main'
 import { StructuredLogger } from '#services/structured_logger'
 import { EmailErrorHandler } from '#services/email_error_handler'
-import env from '#start/env'
+import { HybridEmailService } from '#services/hybrid_email_service'
 
 export interface RequestPasswordResetResponse {
   success: boolean
@@ -84,45 +83,22 @@ export default class PasswordResetService {
       })
       StructuredLogger.info('Token created successfully', { tokenId: resetToken.id, code })
 
-      // Send email with code - DETAILED LOGGING
+      // Send email with code using Hybrid Email Service
       StructuredLogger.info('Sending password reset email', { email: user.email, code })
       
-      // Log SMTP configuration before sending
-      const smtpConfig = {
-        host: env.get('SMTP_HOST'),
-        port: env.get('SMTP_PORT'),
-        username: env.get('SMTP_USERNAME'),
-        passwordLength: env.get('SMTP_PASSWORD')?.length,
-        passwordFirst3: env.get('SMTP_PASSWORD')?.substring(0, 3),
-        passwordLast3: env.get('SMTP_PASSWORD')?.substring(env.get('SMTP_PASSWORD')?.length - 3),
-      }
-      StructuredLogger.info('SMTP config for email sending', smtpConfig)
-      
       try {
-        StructuredLogger.info('Creating email message', {
-          to: user.email,
-          from: env.get('SMTP_USERNAME'),
-          subject: 'Recuperação de Senha - PulseZen'
-        })
-        
-        const mailResult = await mail.send((message) => {
-          message
-            .to(user.email)
-            .from(env.get('SMTP_USERNAME'), 'PulseZen')
-            .subject('Recuperação de Senha - PulseZen')
-            .htmlView('emails/password_reset', {
-              userName: user.profile?.firstName || user.email,
-              code,
-              expiresIn: '1 hora'
-            })
-        })
+        const emailResult = await HybridEmailService.sendPasswordReset(
+          user.email,
+          code,
+          user.profile?.firstName
+        )
 
         StructuredLogger.info('Password reset email sent successfully', {
           userId: user.id,
           email: user.email,
           tokenId: resetToken.id,
           code,
-          mailResult: JSON.stringify(mailResult)
+          emailResult: JSON.stringify(emailResult)
         })
       } catch (emailError) {
         // Log the raw error first
@@ -140,7 +116,6 @@ export default class PasswordResetService {
         EmailErrorHandler.logError(errorDetails, {
           email: user.email,
           userId: user.id,
-          smtpConfig: smtpConfig
         })
         
         // Even if email fails, we still created the token, so return success

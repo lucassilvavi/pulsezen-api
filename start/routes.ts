@@ -17,6 +17,7 @@ import DirectMailTestController from '#controllers/direct_mail_test_controller'
 import SmtpDetailedTestController from '#controllers/smtp_detailed_test_controller'
 import RawSmtpTestController from '#controllers/raw_smtp_test_controller'
 import AlternativeSmtpController from '#controllers/alternative_smtp_controller'
+import ResendTestController from '#controllers/resend_test_controller'
 import AuthController from '#modules/auth/controllers/auth_controller'
 import JournalController from '#modules/journal/controllers/journal_controller'
 import JournalAnalyticsController from '#modules/journal/controllers/journal_analytics_controller'
@@ -45,6 +46,9 @@ router.group(() => {
   router.post('/smtp-detailed', [SmtpDetailedTestController, 'testSmtpConnection']) // Detailed SMTP test
   router.post('/smtp-raw', [RawSmtpTestController, 'testRawSmtp']) // Raw nodemailer test
   router.post('/smtp-587', [AlternativeSmtpController, 'testPort587']) // Test port 587 STARTTLS
+  router.get('/email-service', [ResendTestController, 'checkEmailService']) // Check which email service will be used
+  router.post('/resend-api', [ResendTestController, 'testResendApi']) // Test Resend API directly
+  router.post('/hybrid-email', [ResendTestController, 'testHybridService']) // Test hybrid email service
 }).prefix('/debug')
 
 // API v1 routes
