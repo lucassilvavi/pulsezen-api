@@ -55,6 +55,7 @@ export default class CrisisPredictionController {
   /**
    * Obter predição mais recente do usuário
    * GET /api/crisis/prediction/latest
+   * Auto-gera nova predição se não houver ou se última for > 12h
    */
   async getLatest({ auth, response }: HttpContext) {
     try {
@@ -69,15 +70,43 @@ export default class CrisisPredictionController {
         .orderBy('created_at', 'desc')
         .first()
 
-      if (!prediction) {
-        return response.notFound({
-          success: false,
-          message: 'Nenhuma predição válida encontrada'
-        })
+      // Verificar se precisa gerar nova predição (cache de 12 horas)
+      const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000
+      const timeDiff = prediction ? new Date().getTime() - new Date(prediction.created_at).getTime() : Infinity
+      const needsNewPrediction = !prediction || timeDiff > TWELVE_HOURS_MS
+
+      if (needsNewPrediction) {
+        // Gerar nova predição automaticamente
+        try {
+          const inputData = await this.collectUserData(userId, 14)
+          const newPrediction = await this.predictionEngine.predict(inputData)
+          await this.savePrediction(newPrediction)
+
+          return response.ok({
+            success: true,
+            data: newPrediction,
+            message: 'Nova predição gerada automaticamente'
+          })
+        } catch (error) {
+          // Se falhar ao gerar, retornar a última disponível (se existir)
+          if (prediction) {
+            const parsedPrediction = {
+              ...prediction,
+              factors: prediction.factors || {},
+              interventions: prediction.interventions || [],
+              previous_prediction: prediction.previous_prediction || null
+            }
+            return response.ok({
+              success: true,
+              data: parsedPrediction,
+              message: 'Predição anterior (falha ao gerar nova)'
+            })
+          }
+          throw error
+        }
       }
 
-      // JSONB fields são retornados automaticamente como objetos pelo PostgreSQL
-      // Não precisa fazer JSON.parse()
+      // Retornar predição recente existente
       const parsedPrediction = {
         ...prediction,
         factors: prediction.factors || {},
@@ -299,6 +328,22 @@ export default class CrisisPredictionController {
         created_at: prediction.createdAt,
         updated_at: prediction.updatedAt
       })
+  }
+
+  /**
+   * Método público para gerar predição de qualquer lugar
+   * Usado por MoodController e JournalController após criar entradas
+   */
+  static async generatePredictionForUser(userId: string): Promise<void> {
+    try {
+      const controller = new CrisisPredictionController()
+      const inputData = await controller.collectUserData(userId, 14)
+      const prediction = await controller.predictionEngine.predict(inputData)
+      await controller.savePrediction(prediction)
+    } catch (error) {
+      // Falha silenciosa - não quebrar o fluxo principal se predição falhar
+      console.error('Erro ao gerar predição automática:', error.message)
+    }
   }
 
   /**

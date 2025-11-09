@@ -88,24 +88,20 @@ export default class JournalController {
       
       const entry = await JournalService.createEntry(userId, data)
       
-      // 🔥 Regenerar predição após nova entrada de journal
-      try {
-        const CrisisPredictionController = (await import('#controllers/CrisisPredictionController')).default
-        const predictionController = new CrisisPredictionController()
-        
-        // Chama o método predict em background (não bloqueia a resposta)
-        setImmediate(async () => {
-          try {
-            await predictionController.predict({ auth, request, response } as HttpContext)
-            console.log('✅ Predição regenerada automaticamente após nova entrada de journal')
-          } catch (error) {
-            console.error('❌ Erro ao regenerar predição:', error)
-          }
-        })
-      } catch (error) {
-        // Não falha a criação do journal se a predição falhar
-        console.error('⚠️ Erro ao tentar regenerar predição:', error)
-      }
+      // � Regenerar predição automaticamente após criar entrada de journal
+      setImmediate(async () => {
+        try {
+          const CrisisPredictionController = (await import('#controllers/CrisisPredictionController')).default
+          await CrisisPredictionController.generatePredictionForUser(userId)
+          
+          console.log('✅ Predição regenerada automaticamente após journal entry', {
+            userId,
+            entryId: entry.id
+          })
+        } catch (error) {
+          console.error('❌ Erro ao regenerar predição após journal entry:', error)
+        }
+      })
       
       return response.created({
         success: true,

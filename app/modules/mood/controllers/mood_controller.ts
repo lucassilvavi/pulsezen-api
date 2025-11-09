@@ -66,11 +66,7 @@ export default class MoodController {
       setImmediate(async () => {
         try {
           const CrisisPredictionController = (await import('#controllers/CrisisPredictionController')).default
-          const predictionController = new CrisisPredictionController()
-          
-          // Criar contexto HTTP simulado para o predict
-          const predictContext = { auth, request, response } as HttpContext
-          await predictionController.predict(predictContext)
+          await CrisisPredictionController.generatePredictionForUser(auth.userId)
           
           StructuredLogger.info('✅ Predição regenerada automaticamente após mood entry', {
             userId: auth.userId,
