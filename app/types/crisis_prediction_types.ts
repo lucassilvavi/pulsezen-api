@@ -212,10 +212,11 @@ export const DEFAULT_PREDICTION_CONFIG: PredictionConfig = {
   },
   
   thresholds: {
-    lowRisk: 1.00,     // 0-25% = baixo risco (realmente estável)
-    mediumRisk:0.70,   // 25-45% = risco médio (atenção necessária)
-    highRisk: 0.45,    // 45-70% = alto risco (intervenção recomendada)
-    criticalRisk: 0.25, // 70-100% = risco crítico (intervenção urgente)
+    // NOVA LÓGICA INVERTIDA: 1.000 (100%) = BEM | 0.000 (0%) = CRÍTICO
+    lowRisk: 0.75,      // 75-100% = baixo risco (usuário está bem)
+    mediumRisk: 0.50,   // 50-75% = risco médio (atenção necessária)
+    highRisk: 0.25,     // 25-50% = alto risco (intervenção recomendada)
+    criticalRisk: 0.00, // 0-25% = risco crítico (intervenção urgente)
   },
   
   analysisWindow: {

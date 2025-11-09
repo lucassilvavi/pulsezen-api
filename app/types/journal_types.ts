@@ -140,21 +140,80 @@ export function calculateWordCount(content: string): number {
 }
 
 export function calculateSentimentScore(content: string): number {
-  // Simplified sentiment analysis - could be enhanced with AI
-  const positiveWords = ['feliz', 'alegre', 'bem', 'ótimo', 'excelente', 'grato', 'amor', 'paz'];
-  const negativeWords = ['triste', 'ansioso', 'preocupado', 'mal', 'deprimido', 'nervoso', 'medo', 'raiva'];
+  // Enhanced sentiment analysis with comprehensive Portuguese word lists
+  const positiveWords = [
+    'feliz', 'alegre', 'bem', 'ótimo', 'excelente', 'grato', 'amor', 'paz',
+    'otimo', 'bom', 'boa', 'maravilhoso', 'maravilhosa', 'incrível', 'perfeito',
+    'perfeita', 'animado', 'animada', 'motivado', 'motivada', 'esperança',
+    'esperancoso', 'confiante', 'tranquilo', 'tranquila', 'calmo', 'calma',
+    'relaxado', 'relaxada', 'satisfeito', 'satisfeita', 'realizado', 'realizada',
+    'sucesso', 'vitória', 'conquista', 'alegria', 'felicidade', 'gratidão',
+    'lindo', 'linda', 'bonito', 'bonita', 'positivo', 'positiva', 'agradecido',
+    'agradecida', 'orgulhoso', 'orgulhosa', 'aliviado', 'aliviada', 'melhor'
+  ];
   
-  const words = content.toLowerCase().split(/\s+/);
+  const negativeWords = [
+    'triste', 'ansioso', 'ansiosa', 'preocupado', 'preocupada', 'mal', 'deprimido',
+    'deprimida', 'nervoso', 'nervosa', 'medo', 'raiva', 'irritado', 'irritada',
+    'suicidio', 'suicídio', 'suicida', 'morte', 'morrer', 'acabar', 'desistir',
+    'pessimo', 'péssimo', 'péssima', 'horrível', 'terrível', 'ruim',
+    'vazio', 'vazia', 'sozinho', 'sozinha', 'abandonado', 'abandonada',
+    'estressado', 'estressada', 'cansado', 'cansada', 'exausto', 'exausta',
+    'frustrado', 'frustrada', 'decepcionado', 'decepcionada', 'desesperado',
+    'desesperada', 'desespero', 'angústia', 'angustia', 'sofrimento', 'sofrer',
+    'dor', 'doloroso', 'dolorosa', 'trágico', 'trágica', 'trauma', 'traumático',
+    'traumática', 'assustado', 'assustada', 'pavor', 'pânico', 'panico',
+    'inseguro', 'insegura', 'fraco', 'fraca', 'impotente', 'incapaz',
+    'fracasso', 'falha', 'perder', 'perdido', 'perdida', 'confuso', 'confusa',
+    'culpa', 'culpado', 'culpada', 'vergonha', 'arrependido', 'arrependida',
+    'chorar', 'choro', 'lágrima', 'lagrima', 'solidão', 'solidao', 'isolado',
+    'isolada', 'rejeitado', 'rejeitada', 'magoado', 'magoada', 'ferido', 'ferida',
+    'problemas', 'dificuldade', 'difícil', 'complicado', 'complicada'
+  ];
+  
+  // Critical words that should have stronger weight
+  const criticalNegativeWords = [
+    'suicidio', 'suicídio', 'suicida', 'morte', 'morrer', 'desistir',
+    'desespero', 'desesperado', 'desesperada', 'acabar'
+  ];
+  
+  const text = content.toLowerCase();
+  const words = text.split(/\s+/);
+  
   let positiveCount = 0;
   let negativeCount = 0;
+  let criticalCount = 0;
   
   words.forEach(word => {
-    if (positiveWords.some(pw => word.includes(pw))) positiveCount++;
-    if (negativeWords.some(nw => word.includes(nw))) negativeCount++;
+    // Remove punctuation for better matching
+    const cleanWord = word.replace(/[.,!?;:]/g, '');
+    
+    // Check for critical negative words first (higher weight)
+    if (criticalNegativeWords.some(cw => cleanWord.includes(cw))) {
+      criticalCount++;
+      negativeCount += 2; // Count twice for critical words
+    } else if (negativeWords.some(nw => cleanWord.includes(nw))) {
+      negativeCount++;
+    } else if (positiveWords.some(pw => cleanWord.includes(pw))) {
+      positiveCount++;
+    }
   });
   
   const totalSentimentWords = positiveCount + negativeCount;
   if (totalSentimentWords === 0) return 0;
   
-  return Number(((positiveCount - negativeCount) / totalSentimentWords).toFixed(2));
+  // Calculate base sentiment
+  const baseSentiment = (positiveCount - negativeCount) / totalSentimentWords;
+  
+  // Apply critical word penalty
+  let finalSentiment = baseSentiment;
+  if (criticalCount > 0) {
+    // Ensure critical words push sentiment to at least -0.8
+    finalSentiment = Math.min(finalSentiment, -0.8);
+  }
+  
+  // Clamp between -1 and 1
+  finalSentiment = Math.max(-1, Math.min(1, finalSentiment));
+  
+  return Number(finalSentiment.toFixed(2));
 }

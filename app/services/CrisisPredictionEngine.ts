@@ -419,6 +419,7 @@ export class CrisisPredictionEngine {
 
   /**
    * Calcula o score de risco baseado nos fatores analisados
+   * NOVA LÓGICA: 1.000 (100%) = Usuário está BEM | 0.000 (0%) = Estado CRÍTICO
    */
   private calculateRiskScore(factors: PredictionFactor[]): number {
     let weightedScore = 0
@@ -430,7 +431,7 @@ export class CrisisPredictionEngine {
       // Calcular score do fator baseado no tipo
       switch (factor.type) {
         case 'mood_decline':
-          // Mood: valor baixo = alto risco (inverso)
+          // Mood: valor ALTO = baixo risco (direto)
           // Normalizar: 5.0 = 0 risco, 1.0 = 1.0 risco
           factorScore = Math.max(0, (5.0 - factor.currentValue) / 4.0)
           break
@@ -468,6 +469,21 @@ export class CrisisPredictionEngine {
           }
           break
 
+        case 'temporal_trend':
+          // Tendência temporal: quanto mais negativa (declínio), maior o risco
+          // currentValue: -0.3 (forte declínio) = alto risco
+          // currentValue: 0.0 (estável) = sem risco
+          // currentValue: +0.3 (melhora) = sem risco
+          if (factor.currentValue < 0) {
+            // Declínio: escala de 0 a -1.0
+            // -0.1 = 10%, -0.3 = 30%, -0.5 = 50%, -1.0 = 100%
+            factorScore = Math.min(1, Math.abs(factor.currentValue))
+          } else {
+            // Estável ou melhorando = sem risco
+            factorScore = 0
+          }
+          break
+
         default:
           // Para outros fatores, usar comparação com threshold
           if (factor.currentValue > factor.threshold) {
@@ -483,19 +499,26 @@ export class CrisisPredictionEngine {
       totalWeight += factor.weight
     })
 
-    const finalScore = totalWeight > 0 ? weightedScore / totalWeight : 0
-    const validScore = isNaN(finalScore) ? 0.1 : finalScore
-    return Math.max(0.000, Math.min(1.000, validScore))
+    // Calcular score de RISCO (0-1, onde 1 = máximo risco)
+    const riskScore = totalWeight > 0 ? weightedScore / totalWeight : 0
+    const validRiskScore = isNaN(riskScore) ? 0.1 : riskScore
+    
+    // 🔄 INVERTER A ESCALA: 1 - riskScore
+    // Agora: 1.000 (100%) = BEM | 0.000 (0%) = CRÍTICO
+    const wellbeingScore = 1.000 - Math.max(0.000, Math.min(1.000, validRiskScore))
+    
+    return Math.max(0.000, Math.min(1.000, wellbeingScore))
   }
 
   /**
    * Determina o nível de risco baseado no score
+   * NOVA LÓGICA: 1.000 (100%) = BEM | 0.000 (0%) = CRÍTICO
    */
   private determineRiskLevel(riskScore: number): CrisisRiskLevel {
-    if (riskScore >= this.config.thresholds.criticalRisk) return 'critical'
-    if (riskScore >= this.config.thresholds.highRisk) return 'high'
-    if (riskScore >= this.config.thresholds.mediumRisk) return 'medium'
-    return 'low'
+    if (riskScore <= this.config.thresholds.criticalRisk + 0.25) return 'critical' // 0-25%
+    if (riskScore <= this.config.thresholds.mediumRisk) return 'high'             // 25-50%
+    if (riskScore <= this.config.thresholds.lowRisk) return 'medium'              // 50-75%
+    return 'low'                                                                   // 75-100%
   }
 
   /**
