@@ -50,13 +50,11 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   /*
   |----------------------------------------------------------
-  | Variables for SMTP/Email Configuration
+  | Variables for Resend Email Service
   |----------------------------------------------------------
   */
-  SMTP_HOST: Env.schema.string(),
-  SMTP_PORT: Env.schema.number(),
-  SMTP_USERNAME: Env.schema.string(),
-  SMTP_PASSWORD: Env.schema.string(),
+  RESEND_API_KEY: Env.schema.string(),
+  EMAIL_FROM: Env.schema.string.optional(),
 
   /*
   |----------------------------------------------------------

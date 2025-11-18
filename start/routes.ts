@@ -18,19 +18,11 @@ import MoodController from '#modules/mood/controllers/mood_controller'
 import MoodAnalyticsController from '#modules/mood/controllers/mood_analytics_controller'
 import CrisisPredictionController from '#controllers/CrisisPredictionController'
 import SuggestionController from '#modules/suggestions/controllers/suggestion_controller'
-import SESTestController from '#controllers/ses_test_controller'
 import { middleware } from '#start/kernel'
 
 // Health check routes (no authentication required)
 router.get('/health', [HealthController, 'check'])
 router.get('/ping', [HealthController, 'ping'])
-
-// SES Test routes (for debugging email functionality)
-router.group(() => {
-  router.get('/config', [SESTestController, 'checkConfiguration']) // Check AWS SES configuration
-  router.post('/test-email', [SESTestController, 'testEmail']) // Test basic email sending
-  router.post('/test-password-reset', [SESTestController, 'testPasswordReset']) // Test password reset email
-}).prefix('/ses')
 
 // API v1 routes
 router.group(() => {

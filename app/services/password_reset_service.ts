@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs'
 import User from '#models/user'
 import PasswordResetToken from '#models/password_reset_token'
 import { StructuredLogger } from '#services/structured_logger'
-import { SESEmailService } from '#services/ses_email_service'
+import { ResendEmailService } from '#services/resend_email_service'
 import env from '#start/env'
 
 export interface RequestPasswordResetResponse {
@@ -83,30 +83,29 @@ export default class PasswordResetService {
       })
       StructuredLogger.info('Token created successfully', { tokenId: resetToken.id, code })
 
-      // Send email with code using AWS SES
-      StructuredLogger.info('Sending password reset email with AWS SES', { 
+      // Send email with code using Resend
+      StructuredLogger.info('Sending password reset email with Resend', { 
         email: user.email, 
         code,
         userId: user.id 
       })
       
       try {
-        const emailResult = await SESEmailService.sendPasswordResetEmail(
+        const emailResult = await ResendEmailService.sendPasswordResetEmail(
           user.email,
           code,
           user.profile?.firstName || user.email.split('@')[0]
         )
 
-        StructuredLogger.info('Password reset email sent successfully via AWS SES', {
+        StructuredLogger.info('Password reset email sent successfully via Resend', {
           userId: user.id,
           email: user.email,
           tokenId: resetToken.id,
           code,
-          messageId: emailResult.messageId,
-          provider: emailResult.provider
+          messageId: emailResult.MessageId
         })
       } catch (emailError) {
-        StructuredLogger.error('AWS SES email failed', {
+        StructuredLogger.error('Resend email failed', {
           error: emailError.message,
           errorCode: emailError.code || emailError.name,
           userId: user.id,
