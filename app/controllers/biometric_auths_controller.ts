@@ -143,6 +143,9 @@ export default class BiometricAuthsController {
    * POST /api/auth/biometric/login
    */
   async biometricLogin({ request, response }: HttpContext) {
+    const controllerStart = Date.now()
+    console.log('[PERF] biometricLogin controller started')
+    
     try {
       const {
         userId,
@@ -180,49 +183,42 @@ export default class BiometricAuthsController {
         },
       }
 
+      const t1 = Date.now()
       const result = await BiometricAuthService.authenticateWithBiometric(authData)
+      console.log(`[PERF] BiometricAuthService.authenticateWithBiometric: ${Date.now() - t1}ms`)
 
       if (result.success) {
-        // Buscar dispositivo para obter userId
-        const UserDevice = (await import('#models/user_device')).default
-        const device = await UserDevice.find(result.deviceId!)
-        
-        if (!device) {
+        // O BiometricAuthService já retorna user e device, vamos reutilizar
+        if (!result.user) {
           return response.unauthorized({
             success: false,
-            error: 'Device not found',
+            error: 'Authentication data incomplete',
           })
         }
 
-        // Buscar dados do usuário para retornar estrutura compatível com login normal
-        const User = (await import('#models/user')).default
-        const user = await User.query()
-          .where('id', device.userId)
-          .preload('profile')
-          .first()
+        const user = result.user
 
-        if (!user) {
-          return response.unauthorized({
-            success: false,
-            error: 'User not found',
-          })
-        }
-
-        // Garantir que o perfil existe
-        const profile = await user.getOrCreateProfile()
-
-        // Gerar refresh token usando AuthService (mesma estratégia do login normal)
+        // Garantir que o perfil existe e gerar tokens em paralelo
+        const t2 = Date.now()
         const { AuthService } = await import('#modules/auth/services/auth_service')
         const deviceInfo = {
           fingerprint: deviceFingerprint,
           userAgent: request.header('user-agent'),
           ipAddress: request.ip(),
         }
-        const tokens = await AuthService.generateTokenPair(user.id, user.email, deviceInfo)
+        
+        // Executar em paralelo: profile e tokens
+        const [profile, tokens] = await Promise.all([
+          user.getOrCreateProfile(),
+          AuthService.generateTokenPair(user.id, user.email, deviceInfo)
+        ])
+        console.log(`[PERF] Parallel profile + tokens: ${Date.now() - t2}ms`)
 
         // Serialize profile data
         const profileData = profile.serialize()
 
+        console.log(`[PERF] Total biometricLogin controller: ${Date.now() - controllerStart}ms`)
+        
         // Retornar estrutura IDÊNTICA ao login normal
         return response.ok({
           success: true,

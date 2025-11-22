@@ -46,15 +46,111 @@ export interface AuthResult {
   biometricToken?: BiometricToken
   error?: string
   deviceId?: string
+  user?: User
+  device?: UserDevice
 }
 
 export default class BiometricAuthService {
+  // Cache em memória para dispositivos (TTL: 5 minutos, MAX: 1000 dispositivos)
+  private static deviceCache = new Map<string, { device: UserDevice; user: User; timestamp: number }>()
+  private static readonly CACHE_TTL = 5 * 60 * 1000 // 5 minutos
+  private static readonly MAX_CACHE_SIZE = 1000 // Máximo de 1000 dispositivos em cache (~50MB)
+  
   /**
    * Helper para truncar mensagens de erro para evitar problemas de tamanho no banco
    */
   private static truncateErrorMessage(message: string, maxLength: number = 95): string {
     if (!message || message.length <= maxLength) return message
     return message.substring(0, maxLength - 3) + '...'
+  }
+
+  /**
+   * Limpa entradas expiradas do cache e aplica limite de tamanho (LRU)
+   */
+  private static cleanExpiredCache(): void {
+    const now = Date.now()
+    
+    // 1. Remover expirados
+    for (const [key, value] of this.deviceCache.entries()) {
+      if (now - value.timestamp > this.CACHE_TTL) {
+        this.deviceCache.delete(key)
+      }
+    }
+    
+    // 2. Se ainda exceder o limite, remover os mais antigos (LRU - Least Recently Used)
+    if (this.deviceCache.size > this.MAX_CACHE_SIZE) {
+      const entries = Array.from(this.deviceCache.entries())
+        .sort((a, b) => a[1].timestamp - b[1].timestamp) // Ordenar por timestamp (mais antigo primeiro)
+      
+      const toRemove = entries.slice(0, this.deviceCache.size - this.MAX_CACHE_SIZE)
+      toRemove.forEach(([key]) => this.deviceCache.delete(key))
+      
+      console.log(`[CACHE] LRU cleanup: removed ${toRemove.length} oldest entries, size now: ${this.deviceCache.size}`)
+    }
+  }
+
+  /**
+   * Busca device do cache ou banco de dados
+   */
+  private static async getCachedDevice(fingerprint: string): Promise<{ device: UserDevice; user: User } | null> {
+    // Limpar cache expirado periodicamente (20% de chance para manter controle)
+    if (Math.random() < 0.2) { // 20% de chance a cada chamada
+      this.cleanExpiredCache()
+    }
+
+    // Verificar cache
+    const cached = this.deviceCache.get(fingerprint)
+    if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
+      console.log(`[CACHE HIT] Device found in cache: ${fingerprint.substring(0, 8)}... (${this.deviceCache.size}/${this.MAX_CACHE_SIZE} entries)`)
+      
+      // Atualizar timestamp (LRU - move to end)
+      cached.timestamp = Date.now()
+      
+      return { device: cached.device, user: cached.user }
+    }
+
+    return null
+  }
+
+  /**
+   * Salva device no cache com limite de tamanho
+   */
+  private static setCachedDevice(fingerprint: string, device: UserDevice, user: User): void {
+    // Se atingir o limite, fazer limpeza antes de adicionar
+    if (this.deviceCache.size >= this.MAX_CACHE_SIZE) {
+      console.log(`[CACHE] Max size reached (${this.MAX_CACHE_SIZE}), cleaning...`)
+      this.cleanExpiredCache()
+    }
+    
+    this.deviceCache.set(fingerprint, {
+      device,
+      user,
+      timestamp: Date.now()
+    })
+    console.log(`[CACHE SET] Device cached: ${fingerprint.substring(0, 8)}... (${this.deviceCache.size}/${this.MAX_CACHE_SIZE} entries)`)
+  }
+
+  /**
+   * Retorna estatísticas do cache (útil para monitoramento)
+   */
+  static getCacheStats() {
+    const now = Date.now()
+    let expired = 0
+    
+    for (const [, value] of this.deviceCache.entries()) {
+      if (now - value.timestamp > this.CACHE_TTL) {
+        expired++
+      }
+    }
+    
+    return {
+      size: this.deviceCache.size,
+      maxSize: this.MAX_CACHE_SIZE,
+      utilization: ((this.deviceCache.size / this.MAX_CACHE_SIZE) * 100).toFixed(2) + '%',
+      expired,
+      active: this.deviceCache.size - expired,
+      ttlMinutes: this.CACHE_TTL / 60000
+    }
   }
   /**
    * Registra um novo dispositivo para o usuário
@@ -217,33 +313,63 @@ export default class BiometricAuthService {
    */
   static async authenticateWithBiometric(authData: BiometricAuthData): Promise<AuthResult> {
     const startTime = Date.now()
+    const perfLog = (step: string, stepStartTime: number) => {
+      console.log(`[PERF] ${step}: ${Date.now() - stepStartTime}ms`)
+    }
 
     try {
       let user: User | null = null
       let device: UserDevice | null = null
 
-      // Se userId foi fornecido, buscar diretamente
-      if (authData.userId) {
+      // Tentar buscar do cache primeiro
+      const t0 = Date.now()
+      const cachedData = await this.getCachedDevice(authData.deviceFingerprint)
+      if (cachedData) {
+        device = cachedData.device
+        user = cachedData.user
+        perfLog('Device & User from CACHE', t0)
+      } else if (authData.userId) {
+        // Se userId foi fornecido, buscar diretamente
+        const t1 = Date.now()
         user = await User.find(authData.userId)
+        perfLog('User.find', t1)
+        
         if (!user) {
           return { success: false, method: 'biometric', error: 'User not found' }
         }
 
         // Buscar device
+        const t2 = Date.now()
         device = await UserDevice.query()
           .where('userId', authData.userId)
           .where('fingerprint', authData.deviceFingerprint)
           .preload('trustScore')
           .first()
+        perfLog('Device query with trustScore', t2)
+        
+        // Cachear se encontrado
+        if (device) {
+          this.setCachedDevice(authData.deviceFingerprint, device, user)
+        }
       } else {
         // Identificar usuário pelo deviceFingerprint
+        const t1 = Date.now()
         device = await UserDevice.query()
           .where('fingerprint', authData.deviceFingerprint)
+          .where('biometricEnabled', true) // Otimização: filtrar apenas habilitados
           .preload('trustScore')
           .first()
+        perfLog('Device query by fingerprint', t1)
 
         if (device) {
+          const t2 = Date.now()
           user = await User.find(device.userId)
+          perfLog('User.find from device', t2)
+          
+          // Cachear para próximas autenticações
+          if (user) {
+            this.setCachedDevice(authData.deviceFingerprint, device, user)
+          }
         }
       }
 
@@ -271,6 +397,7 @@ export default class BiometricAuthService {
       }
 
       // Buscar token biométrico válido
+      const t3 = Date.now()
       const biometricToken = await BiometricToken.query()
         .where('userId', user.id)
         .where('deviceId', device.id)
@@ -280,6 +407,7 @@ export default class BiometricAuthService {
           query.whereNull('expiresAt').orWhere('expiresAt', '>', DateTime.now().toSQL())
         })
         .first()
+      perfLog('BiometricToken query', t3)
 
       if (!biometricToken) {
         await this.logFailedAuth(authData, 'No valid biometric token', device.id)
@@ -308,10 +436,12 @@ export default class BiometricAuthService {
 
       // Validar assinatura biométrica (se fornecida)
       if (authData.biometricSignature) {
+        const t4 = Date.now()
         const isValidSignature = await this.validateBiometricSignature(
           biometricToken,
           authData.biometricSignature
         )
+        perfLog('Signature validation', t4)
 
         if (!isValidSignature) {
           await biometricToken.recordAttempt()
@@ -329,36 +459,45 @@ export default class BiometricAuthService {
       // Autenticação bem-sucedida!
       const responseTime = Date.now() - startTime
 
-      // Atualizar estatísticas
-      await biometricToken.recordUsage()
-      await trustScore.recordSuccessfulAuth()
+      // Atualizar estatísticas em paralelo
+      const t5 = Date.now()
       device.lastSeenAt = DateTime.now()
-      await device.save()
+      
+      // Executar todas as atualizações em paralelo
+      const [, , , accessToken] = await Promise.all([
+        biometricToken.recordUsage(),
+        trustScore.recordSuccessfulAuth(),
+        device.save(),
+        this.generateAccessToken(user.id, device.id),
+        AuthLog.logSuccessfulAuth({
+          userId: user.id,
+          deviceId: device.id,
+          authMethod: 'biometric',
+          biometricType: authData.biometricType,
+          ipAddress: authData.ipAddress,
+          userAgent: authData.userAgent,
+          geolocation: authData.geolocation,
+          deviceInfo: authData.deviceInfo,
+          trustScore: trustScore.finalScore,
+          responseTime,
+        })
+      ])
+      perfLog('Parallel updates (token.recordUsage, trustScore, device.save, generateToken, log)', t5)
+      
+      console.log(`[PERF] Total authenticateWithBiometric: ${Date.now() - startTime}ms`)
 
-      // Gerar novo token de acesso
-      const accessToken = await this.generateAccessToken(user.id, device.id)
-
-      // Log de sucesso
-      await AuthLog.logSuccessfulAuth({
-        userId: user.id,
-        deviceId: device.id,
-        authMethod: 'biometric',
-        biometricType: authData.biometricType,
-        ipAddress: authData.ipAddress,
-        userAgent: authData.userAgent,
-        geolocation: authData.geolocation,
-        deviceInfo: authData.deviceInfo,
-        trustScore: trustScore.finalScore,
-        responseTime,
-      })
+      // Preload profile para evitar query adicional no controller
+      await user.load('profile')
 
       return {
         success: true,
         method: 'biometric',
-        token: accessToken,
+        token: accessToken as string,
         trustScore: trustScore.finalScore,
         biometricToken,
         deviceId: device.id,
+        user,
+        device,
       }
     } catch (error) {
       console.error('Biometric authentication error:', error)
