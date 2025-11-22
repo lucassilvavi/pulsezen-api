@@ -183,10 +183,63 @@ export default class BiometricAuthsController {
       const result = await BiometricAuthService.authenticateWithBiometric(authData)
 
       if (result.success) {
+        // Buscar dispositivo para obter userId
+        const UserDevice = (await import('#models/user_device')).default
+        const device = await UserDevice.find(result.deviceId!)
+        
+        if (!device) {
+          return response.unauthorized({
+            success: false,
+            error: 'Device not found',
+          })
+        }
+
+        // Buscar dados do usuário para retornar estrutura compatível com login normal
+        const User = (await import('#models/user')).default
+        const user = await User.query()
+          .where('id', device.userId)
+          .preload('profile')
+          .first()
+
+        if (!user) {
+          return response.unauthorized({
+            success: false,
+            error: 'User not found',
+          })
+        }
+
+        // Garantir que o perfil existe
+        const profile = await user.getOrCreateProfile()
+
+        // Gerar refresh token usando AuthService (mesma estratégia do login normal)
+        const { AuthService } = await import('#modules/auth/services/auth_service')
+        const deviceInfo = {
+          fingerprint: deviceFingerprint,
+          userAgent: request.header('user-agent'),
+          ipAddress: request.ip(),
+        }
+        const tokens = await AuthService.generateTokenPair(user.id, user.email, deviceInfo)
+
+        // Serialize profile data
+        const profileData = profile.serialize()
+
+        // Retornar estrutura IDÊNTICA ao login normal
         return response.ok({
           success: true,
           data: {
-            token: result.token,
+            user: {
+              id: user.id,
+              email: user.email,
+              emailVerified: user.emailVerified,
+              onboardingComplete: profileData.onboardingCompleted,
+              profile: profileData,
+            },
+            token: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+          },
+          message: 'Login successful',
+          // Informações adicionais de biometria (opcional)
+          biometric: {
             method: result.method,
             trustScore: result.trustScore,
             deviceId: result.deviceId,
