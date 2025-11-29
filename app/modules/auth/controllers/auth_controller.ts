@@ -244,7 +244,8 @@ export default class AuthController {
 
       // Mapear os dados do mobile app para os campos da tabela
       if (payload.dateOfBirth) {
-        profile.dateOfBirth = DateTime.fromISO(payload.dateOfBirth)
+        // Parse date without timezone to avoid day shift issues
+        profile.dateOfBirth = DateTime.fromISO(payload.dateOfBirth, { zone: 'utc' }).startOf('day')
       }
 
       // Usar preferences para armazenar dados adicionais do onboarding
@@ -333,7 +334,10 @@ export default class AuthController {
       if (data.firstName !== undefined) profile.firstName = data.firstName
       if (data.lastName !== undefined) profile.lastName = data.lastName
       if (data.displayName !== undefined) profile.displayName = data.displayName
-      if (data.dateOfBirth !== undefined) profile.dateOfBirth = DateTime.fromISO(data.dateOfBirth)
+      if (data.dateOfBirth !== undefined) {
+        // Parse date without timezone to avoid day shift issues
+        profile.dateOfBirth = DateTime.fromISO(data.dateOfBirth, { zone: 'utc' }).startOf('day')
+      }
       if (data.sex !== undefined) profile.sex = data.sex
       if (data.avatarUrl !== undefined) profile.avatarUrl = data.avatarUrl
       
